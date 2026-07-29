@@ -190,7 +190,8 @@ export default function Shop() {
           --surface: #FFFFFF;
           --ink: #2B2E4A;
           --muted: #7A7A82;
-          --accent: #FF6F59;
+          --accent: #C2521B;
+          --accent-dark: #9C4015;
           --accent-ink: #7A2E00;
           --accent2: #2F6FED;
           --line: #E4DFD6;
@@ -199,6 +200,22 @@ export default function Shop() {
           --font-mono: 'JetBrains Mono', monospace;
         }
         .sw-root * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        .sw-pill-btn {
+          display: inline-flex;
+          align-items: center;
+          background: #fff;
+          color: var(--accent-dark);
+          font-family: var(--font-body);
+          font-weight: 600;
+          font-size: 14.5px;
+          padding: 12px 24px;
+          border-radius: 999px;
+          text-decoration: none;
+          cursor: pointer;
+          transition: transform 0.15s ease;
+        }
+        .sw-pill-btn:hover { transform: translateY(-1px); }
         .sw-layer-bg {
           background-image: repeating-linear-gradient(to bottom, transparent 0px, transparent 5px, var(--line) 5px, var(--line) 6px);
         }
@@ -253,7 +270,7 @@ export default function Shop() {
           align-items: center;
           gap: 6px;
         }
-        .sw-add-btn:hover { background: #E85A44; border-color: #E85A44; }
+        .sw-add-btn:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
         .sw-drawer {
           position: fixed;
           top: 0; right: 0; bottom: 0;
@@ -297,7 +314,7 @@ export default function Shop() {
 
       <div className="sw-root">
         {/* Header */}
-        <header style={{ position: "sticky", top: 0, zIndex: 30, background: "var(--bg)", borderBottom: "1px solid var(--line)" }}>
+        <header style={{ position: "sticky", top: 0, zIndex: 30, background: "var(--surface)", borderBottom: "1px solid var(--line)" }}>
           <div style={{ maxWidth: 1080, margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <Logo size={38} withText={false} />
@@ -335,32 +352,33 @@ export default function Shop() {
         </header>
 
         {/* Hero */}
-        <section style={{ maxWidth: 1080, margin: "0 auto", padding: "56px 24px 24px", position: "relative", overflow: "hidden" }}>
+        <section style={{ background: "var(--accent)", position: "relative", overflow: "hidden" }}>
           <Logo
-            size={380}
+            size={420}
             withText={false}
-            color="#2B2E4A"
-            accent="#2B2E4A"
-            style={{ position: "absolute", top: -90, right: -70, opacity: 0.05, transform: "rotate(-8deg)", pointerEvents: "none" }}
+            color="#ffffff"
+            accent="#ffffff"
+            style={{ position: "absolute", top: -110, right: -90, opacity: 0.12, transform: "rotate(-8deg)", pointerEvents: "none" }}
           />
-          <div style={{ position: "relative" }}>
-            <div className={`sw-hero-reveal sw-layer-bg ${heroReady ? "ready" : ""}`} style={{ position: "absolute", inset: 0, opacity: 0.6 }} />
-            <div style={{ position: "relative" }}>
-              <p style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--muted)", letterSpacing: "0.04em", marginBottom: 10 }}>
-                FDM · PLA · PETG · TPU
-              </p>
-              <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(32px, 5vw, 48px)", lineHeight: 1.05, letterSpacing: "-0.02em", margin: 0, maxWidth: 640 }}>
-                Schicht für Schicht zu deinem Objekt
-              </h1>
-              <p style={{ color: "var(--muted)", fontSize: 15.5, maxWidth: 480, marginTop: 14, lineHeight: 1.6 }}>
-                Handgefertigte 3D-Drucke aus dem Werkstattregal – von Deko über Ersatzteile bis zu deinem eigenen Entwurf.
-              </p>
-            </div>
+          <div style={{ maxWidth: 1080, margin: "0 auto", padding: "72px 24px 88px", position: "relative" }}>
+            <p style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "rgba(255,255,255,0.8)", letterSpacing: "0.04em", marginBottom: 14 }}>
+              FDM · PLA · PETG · TPU
+            </p>
+            <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(34px, 5.5vw, 54px)", lineHeight: 1.05, letterSpacing: "-0.02em", margin: 0, maxWidth: 640, color: "#fff" }}>
+              Schicht für Schicht zu deinem Objekt
+            </h1>
+            <p style={{ color: "rgba(255,255,255,0.88)", fontSize: 15.5, maxWidth: 480, marginTop: 16, lineHeight: 1.6 }}>
+              Handgefertigte 3D-Drucke aus dem Werkstattregal – von Deko über Ersatzteile bis zu deinem eigenen Entwurf.
+            </p>
+            <a href="#produkte" className="sw-pill-btn" style={{ marginTop: 28 }}>
+              Zu den Produkten
+            </a>
           </div>
+          <div style={{ textAlign: "center", paddingBottom: 18, color: "rgba(255,255,255,0.6)" }}>▾</div>
         </section>
 
         {/* Kategorien */}
-        <section style={{ maxWidth: 1080, margin: "0 auto", padding: "0 24px 8px" }}>
+        <section id="produkte" style={{ maxWidth: 1080, margin: "0 auto", padding: "0 24px 8px", scrollMarginTop: 80 }}>
           <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
             {CATEGORIES.map((c) => {
               const Icon = c.icon;
