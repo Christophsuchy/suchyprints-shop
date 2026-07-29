@@ -1,15 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import emailjs from "@emailjs/browser";
-import { supabase } from "./supabaseClient";
-import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Check, Loader2 } from "lucide-react";
-
-// EmailJS-Zugangsdaten – auf https://www.emailjs.com/ kostenlos anlegen
-// und hier die drei Werte aus deinem Account eintragen.
-const EMAILJS_SERVICE_ID = "service_tks1mei";
-const EMAILJS_TEMPLATE_ID = "template_ctsn259";
-const EMAILJS_PUBLIC_KEY = "GRw99PmWJicyivjXB";
-// Wohin die Bestellbenachrichtigung gehen soll (deine eigene Adresse):
-const SHOP_OWNER_EMAIL = "christoph.suchy@suchyprints.at";
+import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Check } from "lucide-react";
 
 const CATEGORIES = [
   { id: "alle", label: "Alle", icon: Layers },
@@ -52,32 +42,27 @@ export default function Shop() {
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutDone, setCheckoutDone] = useState(false);
   const [heroReady, setHeroReady] = useState(false);
-  const [customerName, setCustomerName] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [sending, setSending] = useState(false);
-  const [sendError, setSendError] = useState("");
   const loaded = useRef(false);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("sw-cart");
-      if (saved) setCart(JSON.parse(saved));
-    } catch (e) {
-      // kein gespeicherter Warenkorb vorhanden
-    } finally {
-      loaded.current = true;
-    }
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await window.storage.get("cart");
+        if (mounted && res && res.value) setCart(JSON.parse(res.value));
+      } catch (e) {
+        // noch kein gespeicherter Warenkorb vorhanden
+      } finally {
+        loaded.current = true;
+      }
+    })();
     const t = setTimeout(() => setHeroReady(true), 50);
-    return () => clearTimeout(t);
+    return () => { mounted = false; clearTimeout(t); };
   }, []);
 
   useEffect(() => {
     if (!loaded.current) return;
-    try {
-      localStorage.setItem("sw-cart", JSON.stringify(cart));
-    } catch (e) {
-      // Speichern fehlgeschlagen, z.B. privater Modus
-    }
+    window.storage.set("cart", JSON.stringify(cart)).catch(() => {});
   }, [cart]);
 
   const filtered = useMemo(() => {
@@ -104,46 +89,6 @@ export default function Shop() {
       return { ...c, [id]: next };
     });
   const removeItem = (id) => setCart((c) => { const n = { ...c }; delete n[id]; return n; });
-
-  const sendOrder = async () => {
-    setSendError("");
-    if (!customerName.trim() || !customerEmail.trim()) {
-      setSendError("Bitte Name und E-Mail angeben.");
-      return;
-    }
-    setSending(true);
-    const orderDetails = cartItems
-      .map((i) => `${i.qty}x ${i.name} (${formatPrice(i.price)} pro Stück) = ${formatPrice(i.qty * i.price)}`)
-      .join("\n");
-    const itemsForDb = cartItems.map((i) => ({ name: i.name, qty: i.qty, price: i.price }));
-    try {
-      await emailjs.send(
-        EMAILJS_SERVICE_ID,
-        EMAILJS_TEMPLATE_ID,
-        {
-          to_email: SHOP_OWNER_EMAIL,
-          customer_name: customerName,
-          customer_email: customerEmail,
-          order_details: orderDetails,
-          total: formatPrice(subtotal),
-        },
-        EMAILJS_PUBLIC_KEY
-      );
-      const { error: dbError } = await supabase.from("orders").insert({
-        customer_name: customerName,
-        customer_email: customerEmail,
-        items: itemsForDb,
-        total: subtotal,
-      });
-      if (dbError) console.error("Bestellung konnte nicht im Dashboard gespeichert werden:", dbError);
-      setCheckoutDone(true);
-      setCart({});
-    } catch (err) {
-      setSendError("Senden fehlgeschlagen. Bitte später erneut versuchen.");
-    } finally {
-      setSending(false);
-    }
-  };
 
   return (
     <div style={{ fontFamily: "var(--font-body)", color: "var(--ink)", background: "var(--bg)", minHeight: "100%" }}>
@@ -255,8 +200,6 @@ export default function Shop() {
           outline: none;
         }
         .sw-search:focus { border-color: var(--ink); }
-        .sw-spin { animation: sw-spin-anim 0.8s linear infinite; }
-        @keyframes sw-spin-anim { to { transform: rotate(360deg); } }
       `}</style>
 
       <div className="sw-root">
@@ -430,37 +373,21 @@ export default function Shop() {
           </div>
           {checkoutDone ? (
             <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center", padding: "12px 0", color: "#0F6E56" }}>
-              <Check size={16} /> <span style={{ fontSize: 14, fontWeight: 500 }}>Bestellung gesendet – du erhältst eine Bestätigung per E-Mail.</span>
+              <Check size={16} /> <span style={{ fontSize: 14, fontWeight: 500 }}>Anfrage gesendet</span>
             </div>
           ) : (
-            <>
-              <input
-                placeholder="Dein Name"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                style={{ width: "100%", border: "1px solid var(--line)", borderRadius: 8, padding: "9px 12px", fontSize: 13.5, fontFamily: "var(--font-body)", marginBottom: 8, outline: "none" }}
-              />
-              <input
-                placeholder="Deine E-Mail-Adresse"
-                type="email"
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                style={{ width: "100%", border: "1px solid var(--line)", borderRadius: 8, padding: "9px 12px", fontSize: 13.5, fontFamily: "var(--font-body)", marginBottom: 10, outline: "none" }}
-              />
-              {sendError && (
-                <p style={{ color: "#A32D2D", fontSize: 12.5, marginBottom: 8 }}>{sendError}</p>
-              )}
-              <button
-                disabled={cartItems.length === 0 || sending}
-                onClick={sendOrder}
-                className="sw-add-btn"
-                style={{ width: "100%", justifyContent: "center", background: cartItems.length === 0 ? "var(--muted)" : "var(--ink)", borderColor: cartItems.length === 0 ? "var(--muted)" : "var(--ink)", cursor: cartItems.length === 0 ? "not-allowed" : "pointer" }}
-              >
-                {sending ? <Loader2 size={14} className="sw-spin" /> : <Send size={14} />}
-                {sending ? "Wird gesendet…" : "Bestellung senden"}
-              </button>
-            </>
+            <button
+              disabled={cartItems.length === 0}
+              onClick={() => setCheckoutDone(true)}
+              className="sw-add-btn"
+              style={{ width: "100%", justifyContent: "center", background: cartItems.length === 0 ? "var(--muted)" : "var(--ink)", borderColor: cartItems.length === 0 ? "var(--muted)" : "var(--ink)", cursor: cartItems.length === 0 ? "not-allowed" : "pointer" }}
+            >
+              Bestellung anfragen
+            </button>
           )}
+          <p style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 10, textAlign: "center" }}>
+            Demo – hier würde ein echter Zahlungsanbieter angebunden.
+          </p>
         </div>
       </div>
     </div>
