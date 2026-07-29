@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useId } from "react";
 import emailjs from "@emailjs/browser";
 import { supabase } from "./supabaseClient";
-import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Loader2 } from "lucide-react";
+import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Loader2, Trash2, Sun, Moon } from "lucide-react";
 
 // EmailJS-Zugangsdaten – auf https://www.emailjs.com/ kostenlos anlegen
 // und hier die drei Werte aus deinem Account eintragen.
@@ -88,6 +88,7 @@ export default function Shop() {
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutDone, setCheckoutDone] = useState(false);
   const [heroReady, setHeroReady] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [sending, setSending] = useState(false);
@@ -103,9 +104,23 @@ export default function Shop() {
     } finally {
       loaded.current = true;
     }
+    try {
+      const savedTheme = localStorage.getItem("sw-theme");
+      if (savedTheme === "dark") setDarkMode(true);
+    } catch (e) {
+      // kein gespeichertes Farbschema vorhanden
+    }
     const t = setTimeout(() => setHeroReady(true), 50);
     return () => clearTimeout(t);
   }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("sw-theme", darkMode ? "dark" : "light");
+    } catch (e) {
+      // Speichern fehlgeschlagen
+    }
+  }, [darkMode]);
 
   useEffect(() => {
     if (!loaded.current) return;
@@ -182,7 +197,7 @@ export default function Shop() {
   };
 
   return (
-    <div style={{ fontFamily: "var(--font-body)", color: "var(--ink)", background: "var(--bg)", minHeight: "100%" }}>
+    <div className={`sw-app ${darkMode ? "dark" : ""}`} style={{ fontFamily: "var(--font-body)", color: "var(--ink)", background: "var(--bg)", minHeight: "100%" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
         :root {
@@ -190,8 +205,9 @@ export default function Shop() {
           --surface: #FFFFFF;
           --ink: #2B2E4A;
           --muted: #7A7A82;
-          --accent: #C2521B;
-          --accent-dark: #9C4015;
+          --accent: #A85A32;
+          --accent-dark: #82431F;
+          --accent-soft: #C97A4E;
           --accent-ink: #7A2E00;
           --accent2: #2F6FED;
           --line: #E4DFD6;
@@ -200,6 +216,37 @@ export default function Shop() {
           --font-mono: 'JetBrains Mono', monospace;
         }
         .sw-root * { box-sizing: border-box; }
+        .sw-app.dark {
+          --bg: #1C1815;
+          --surface: #262019;
+          --ink: #F2EBE3;
+          --muted: #A79C90;
+          --line: #3A322A;
+        }
+        .sw-app.dark .sw-card,
+        .sw-app.dark .sw-drawer,
+        .sw-app.dark header {
+          background: var(--surface);
+        }
+        .sw-app.dark .sw-search-wrap,
+        .sw-app.dark .sw-cat-btn,
+        .sw-app.dark .sw-qty-btn {
+          background: var(--surface);
+          color: var(--ink);
+        }
+        .sw-theme-toggle {
+          border: 1px solid var(--line);
+          background: var(--surface);
+          border-radius: 999px;
+          width: 42px;
+          height: 42px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          color: var(--ink);
+          flex-shrink: 0;
+        }
         html { scroll-behavior: smooth; }
         .sw-pill-btn {
           display: inline-flex;
@@ -231,17 +278,41 @@ export default function Shop() {
           font-family: var(--font-body);
           font-size: 13.5px;
           font-weight: 500;
-          padding: 8px 14px;
+          padding: 7px 16px 7px 7px;
           border-radius: 999px;
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 8px;
           cursor: pointer;
           white-space: nowrap;
+          transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        }
+        .sw-cat-btn:hover {
+          border-color: var(--accent-soft);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 14px rgba(168, 90, 50, 0.14);
+        }
+        .sw-cat-icon {
+          width: 24px;
+          height: 24px;
+          border-radius: 999px;
+          background: rgba(168, 90, 50, 0.12);
+          color: var(--accent);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          transition: background 0.18s ease, color 0.18s ease;
         }
         .sw-cat-btn.active {
-          background: var(--ink);
-          border-color: var(--ink);
+          background: linear-gradient(135deg, var(--accent-soft), var(--accent));
+          border-color: var(--accent);
+          color: #fff;
+          transform: translateY(-1px);
+          box-shadow: 0 8px 18px rgba(130, 67, 31, 0.32);
+        }
+        .sw-cat-btn.active .sw-cat-icon {
+          background: rgba(255,255,255,0.25);
           color: #fff;
         }
         .sw-card {
@@ -297,22 +368,46 @@ export default function Shop() {
           display: flex; align-items: center; justify-content: center;
           cursor: pointer; color: var(--ink);
         }
-        .sw-search {
+        .sw-search-wrap {
+          width: 42px;
+          height: 42px;
+          border-radius: 999px;
           border: 1px solid var(--line);
           background: var(--surface);
-          border-radius: 999px;
-          padding: 8px 14px 8px 36px;
+          display: flex;
+          align-items: center;
+          overflow: hidden;
+          transition: width 0.28s cubic-bezier(.16,1,.3,1), border-color 0.2s ease;
+          flex-shrink: 0;
+        }
+        .sw-search-wrap:hover,
+        .sw-search-wrap:focus-within,
+        .sw-search-wrap.has-value {
+          width: 220px;
+          border-color: var(--accent);
+        }
+        .sw-search-icon {
+          position: absolute;
+          left: 13px;
+          pointer-events: none;
+        }
+        .sw-search {
+          border: none;
+          background: transparent;
+          padding: 0 14px 0 38px;
           font-family: var(--font-body);
           font-size: 13.5px;
-          width: 200px;
+          width: 100%;
+          height: 100%;
           outline: none;
+          min-width: 0;
         }
         .sw-search:focus { border-color: var(--ink); }
         .sw-spin { animation: sw-spin-anim 0.8s linear infinite; }
         @keyframes sw-spin-anim { to { transform: rotate(360deg); } }
       `}</style>
 
-      <div className="sw-root">
+      <div className={`sw-root ${darkMode ? "dark" : ""}`}>
         {/* Header */}
         <header style={{ position: "sticky", top: 0, zIndex: 30, background: "var(--surface)", borderBottom: "1px solid var(--line)" }}>
           <div style={{ maxWidth: 1080, margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
@@ -326,8 +421,8 @@ export default function Shop() {
             <div style={{ position: "relative", display: "none" }} />
 
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ position: "relative" }}>
-                <Search size={15} color="var(--muted)" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
+              <div className={`sw-search-wrap ${query ? "has-value" : ""}`} style={{ position: "relative" }}>
+                <Search size={15} color="var(--muted)" className="sw-search-icon" style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)" }} />
                 <input
                   className="sw-search"
                   placeholder="Produkt suchen…"
@@ -335,6 +430,13 @@ export default function Shop() {
                   onChange={(e) => setQuery(e.target.value)}
                 />
               </div>
+              <button
+                onClick={() => setDarkMode((d) => !d)}
+                style={{ border: "1px solid var(--line)", background: "var(--surface)", borderRadius: 10, width: 42, height: 42, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
+                aria-label={darkMode ? "Helles Design" : "Dunkles Design"}
+              >
+                {darkMode ? <Sun size={17} color="var(--ink)" /> : <Moon size={17} color="var(--ink)" />}
+              </button>
               <button
                 onClick={() => setCartOpen(true)}
                 style={{ position: "relative", border: "1px solid var(--line)", background: "var(--surface)", borderRadius: 10, width: 42, height: 42, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
@@ -352,7 +454,7 @@ export default function Shop() {
         </header>
 
         {/* Hero */}
-        <section style={{ background: "var(--accent)", position: "relative", overflow: "hidden" }}>
+        <section style={{ background: "linear-gradient(135deg, var(--accent-soft), var(--accent) 55%, var(--accent-dark))", position: "relative", overflow: "hidden" }}>
           <Logo
             size={420}
             withText={false}
@@ -388,7 +490,7 @@ export default function Shop() {
                   className={`sw-cat-btn ${category === c.id ? "active" : ""}`}
                   onClick={() => setCategory(c.id)}
                 >
-                  <Icon size={14} />
+                  <span className="sw-cat-icon"><Icon size={12} /></span>
                   {c.label}
                 </button>
               );
@@ -464,8 +566,12 @@ export default function Shop() {
       {/* Warenkorb-Overlay + Drawer */}
       <div className={`sw-overlay ${cartOpen ? "open" : ""}`} onClick={() => setCartOpen(false)} />
       <div className={`sw-drawer ${cartOpen ? "open" : ""}`}>
-        <div style={{ padding: "18px 20px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>Warenkorb</span>
+        <div style={{ height: 4, background: "linear-gradient(90deg, var(--accent-soft), var(--accent), var(--accent-dark))", flexShrink: 0 }} />
+        <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Logo size={26} withText={false} />
+            <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>Warenkorb</span>
+          </div>
           <button onClick={() => setCartOpen(false)} style={{ border: "none", background: "none", cursor: "pointer", padding: 4 }} aria-label="Schließen">
             <X size={18} />
           </button>
@@ -473,20 +579,31 @@ export default function Shop() {
 
         <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px" }}>
           {cartItems.length === 0 ? (
-            <p style={{ color: "var(--muted)", fontSize: 14, marginTop: 24 }}>Dein Warenkorb ist leer.</p>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 10, marginTop: 48 }}>
+              <div style={{ width: 56, height: 56, borderRadius: 999, background: "rgba(168, 90, 50, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <ShoppingCart size={22} color="var(--accent)" />
+              </div>
+              <p style={{ color: "var(--ink)", fontSize: 14.5, fontWeight: 500, margin: 0 }}>Noch nichts im Warenkorb</p>
+              <p style={{ color: "var(--muted)", fontSize: 13, margin: 0, maxWidth: 220 }}>Stöber doch mal in den Kategorien – da ist bestimmt etwas für dich dabei.</p>
+              <a href="#produkte" onClick={() => setCartOpen(false)} className="sw-pill-btn" style={{ marginTop: 8, background: "var(--accent)", color: "#fff" }}>
+                Jetzt stöbern
+              </a>
+            </div>
           ) : (
             cartItems.map((item) => (
-              <div key={item.id} style={{ display: "flex", gap: 12, padding: "12px 0", borderBottom: "1px solid var(--line)" }}>
-                <div style={{ width: 44, height: 44, borderRadius: 8, background: item.hue, flexShrink: 0 }} />
+              <div key={item.id} style={{ display: "flex", gap: 12, padding: "14px 0", borderBottom: "1px solid var(--line)" }}>
+                <div style={{ width: 52, height: 52, borderRadius: 12, background: `linear-gradient(155deg, ${item.hue}, ${item.hue}cc)`, flexShrink: 0, boxShadow: "0 4px 10px rgba(0,0,0,0.12)" }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: 13.5, fontWeight: 500, margin: 0, lineHeight: 1.35 }}>{item.name}</p>
                   <p style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--muted)", margin: "4px 0 8px" }}>{formatPrice(item.price)}</p>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <button className="sw-qty-btn" onClick={() => changeQty(item.id, -1)} aria-label="Menge verringern"><Minus size={13} /></button>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 13, minWidth: 16, textAlign: "center" }}>{item.qty}</span>
-                    <button className="sw-qty-btn" onClick={() => changeQty(item.id, 1)} aria-label="Menge erhöhen"><Plus size={13} /></button>
-                    <button onClick={() => removeItem(item.id)} style={{ marginLeft: "auto", border: "none", background: "none", color: "var(--muted)", cursor: "pointer", fontSize: 12.5 }}>
-                      Entfernen
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--line)", borderRadius: 999, overflow: "hidden" }}>
+                      <button onClick={() => changeQty(item.id, -1)} aria-label="Menge verringern" style={{ border: "none", background: "none", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--ink)" }}><Minus size={12} /></button>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, minWidth: 18, textAlign: "center" }}>{item.qty}</span>
+                      <button onClick={() => changeQty(item.id, 1)} aria-label="Menge erhöhen" style={{ border: "none", background: "none", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--ink)" }}><Plus size={12} /></button>
+                    </div>
+                    <button onClick={() => removeItem(item.id)} aria-label="Entfernen" style={{ marginLeft: "auto", border: "none", background: "none", color: "var(--muted)", cursor: "pointer", display: "flex", alignItems: "center" }}>
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 </div>
@@ -496,9 +613,9 @@ export default function Shop() {
         </div>
 
         <div style={{ padding: "16px 20px 20px", borderTop: "1px solid var(--line)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
-            <span style={{ fontSize: 14, color: "var(--muted)" }}>Zwischensumme</span>
-            <span style={{ fontFamily: "var(--font-mono)", fontWeight: 500, fontSize: 16 }}>{formatPrice(subtotal)}</span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, padding: "10px 14px", borderRadius: 12, background: "rgba(168, 90, 50, 0.08)" }}>
+            <span style={{ fontSize: 13.5, color: "var(--ink)", fontWeight: 500 }}>Zwischensumme</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontWeight: 600, fontSize: 17, color: "var(--accent-dark)" }}>{formatPrice(subtotal)}</span>
           </div>
           {checkoutDone ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, justifyContent: "center", padding: "16px 0" }}>
@@ -511,14 +628,14 @@ export default function Shop() {
                 placeholder="Dein Name"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                style={{ width: "100%", border: "1px solid var(--line)", borderRadius: 8, padding: "9px 12px", fontSize: 13.5, fontFamily: "var(--font-body)", marginBottom: 8, outline: "none" }}
+                style={{ width: "100%", border: "1px solid var(--line)", borderRadius: 10, padding: "10px 14px", fontSize: 13.5, fontFamily: "var(--font-body)", marginBottom: 8, outline: "none" }}
               />
               <input
                 placeholder="Deine E-Mail-Adresse"
                 type="email"
                 value={customerEmail}
                 onChange={(e) => setCustomerEmail(e.target.value)}
-                style={{ width: "100%", border: "1px solid var(--line)", borderRadius: 8, padding: "9px 12px", fontSize: 13.5, fontFamily: "var(--font-body)", marginBottom: 10, outline: "none" }}
+                style={{ width: "100%", border: "1px solid var(--line)", borderRadius: 10, padding: "10px 14px", fontSize: 13.5, fontFamily: "var(--font-body)", marginBottom: 10, outline: "none" }}
               />
               {sendError && (
                 <p style={{ color: "#A32D2D", fontSize: 12.5, marginBottom: 8 }}>{sendError}</p>
@@ -526,8 +643,13 @@ export default function Shop() {
               <button
                 disabled={cartItems.length === 0 || sending}
                 onClick={sendOrder}
-                className="sw-add-btn"
-                style={{ width: "100%", justifyContent: "center", background: cartItems.length === 0 ? "var(--muted)" : "var(--ink)", borderColor: cartItems.length === 0 ? "var(--muted)" : "var(--ink)", cursor: cartItems.length === 0 ? "not-allowed" : "pointer" }}
+                style={{
+                  width: "100%", justifyContent: "center", display: "flex", alignItems: "center", gap: 8,
+                  padding: "12px 0", borderRadius: 999, border: "none", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 14.5, color: "#fff",
+                  background: cartItems.length === 0 ? "var(--muted)" : "linear-gradient(135deg, var(--accent-soft), var(--accent-dark))",
+                  cursor: cartItems.length === 0 ? "not-allowed" : "pointer",
+                  boxShadow: cartItems.length === 0 ? "none" : "0 8px 18px rgba(130, 67, 31, 0.32)",
+                }}
               >
                 {sending ? <Loader2 size={14} className="sw-spin" /> : <Send size={14} />}
                 {sending ? "Wird gesendet…" : "Bestellung senden"}
