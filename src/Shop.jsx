@@ -1,5 +1,51 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Check } from "lucide-react";
+import React, { useState, useEffect, useMemo, useRef, useId } from "react";
+import emailjs from "@emailjs/browser";
+import { supabase } from "./supabaseClient";
+import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Loader2 } from "lucide-react";
+
+// EmailJS-Zugangsdaten – auf https://www.emailjs.com/ kostenlos anlegen
+// und hier die drei Werte aus deinem Account eintragen.
+const EMAILJS_SERVICE_ID = "service_tks1mei";
+const EMAILJS_TEMPLATE_ID = "template_ctsn259";
+const EMAILJS_PUBLIC_KEY = "GRw99PmWJicyivjXB";
+// Wohin die Bestellbenachrichtigung gehen soll (deine eigene Adresse):
+const SHOP_OWNER_EMAIL = "christoph.suchy@suchyprints.at";
+
+// Rund-Logo als echte Vektorgrafik (kein Foto) – Kreis mit Druckkopf-Icon und Schriftzug,
+// mehrfach auf der Seite einsetzbar. `dim` steuert ob Ring-Text mitgerendert wird.
+function Logo({ size = 44, withText = true, color = "#2B2E4A", accent = "#FF6F59", style }) {
+  const uid = useId().replace(/:/g, "");
+  const topArcId = `logoTop-${uid}`;
+  const bottomArcId = `logoBottom-${uid}`;
+  return (
+    <svg width={size} height={size} viewBox="0 0 240 240" style={style}>
+      <defs>
+        <path id={topArcId} d="M 22 122 A 100 100 0 0 1 218 122" fill="none" />
+        <path id={bottomArcId} d="M 218 130 A 100 100 0 0 1 22 130" fill="none" />
+      </defs>
+      <circle cx="120" cy="120" r="112" fill="none" stroke={color} strokeWidth="6" />
+      <circle cx="120" cy="120" r="97" fill="none" stroke={color} strokeWidth="2.5" />
+      {withText && (
+        <>
+          <text fontFamily="'Space Grotesk', sans-serif" fontSize="17" fontWeight="700" fill={color} letterSpacing="2.5">
+            <textPath href={`#${topArcId}`} startOffset="50%" textAnchor="middle">SUCHYPRINTS</textPath>
+          </text>
+          <text fontFamily="'Space Grotesk', sans-serif" fontSize="14" fontWeight="700" fill={color} letterSpacing="4">
+            <textPath href={`#${bottomArcId}`} startOffset="50%" textAnchor="middle">3D DRUCK</textPath>
+          </text>
+        </>
+      )}
+      <line x1="52" y1="94" x2="93" y2="94" stroke={color} strokeWidth="5" strokeLinecap="round" />
+      <line x1="147" y1="94" x2="188" y2="94" stroke={color} strokeWidth="5" strokeLinecap="round" />
+      <polygon points="120,58 139,70 139,94 120,106 101,94 101,70" fill="none" stroke={color} strokeWidth="6" strokeLinejoin="round" />
+      <text x="120" y="91" fontFamily="'Space Grotesk', sans-serif" fontSize="21" fontWeight="800" fill={color} textAnchor="middle">SP</text>
+      <polygon points="112,106 128,106 122,128 118,128" fill={color} />
+      <line x1="120" y1="128" x2="120" y2="149" stroke={color} strokeWidth="3.5" strokeLinecap="round" />
+      <polygon points="88,152 152,152 168,166 72,166" fill="none" stroke={color} strokeWidth="5" strokeLinejoin="round" />
+      <circle cx="120" cy="149" r="5" fill={accent} />
+    </svg>
+  );
+}
 
 const CATEGORIES = [
   { id: "alle", label: "Alle", icon: Layers },
@@ -42,27 +88,32 @@ export default function Shop() {
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutDone, setCheckoutDone] = useState(false);
   const [heroReady, setHeroReady] = useState(false);
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState("");
   const loaded = useRef(false);
 
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const res = await window.storage.get("cart");
-        if (mounted && res && res.value) setCart(JSON.parse(res.value));
-      } catch (e) {
-        // noch kein gespeicherter Warenkorb vorhanden
-      } finally {
-        loaded.current = true;
-      }
-    })();
+    try {
+      const saved = localStorage.getItem("sw-cart");
+      if (saved) setCart(JSON.parse(saved));
+    } catch (e) {
+      // kein gespeicherter Warenkorb vorhanden
+    } finally {
+      loaded.current = true;
+    }
     const t = setTimeout(() => setHeroReady(true), 50);
-    return () => { mounted = false; clearTimeout(t); };
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
     if (!loaded.current) return;
-    window.storage.set("cart", JSON.stringify(cart)).catch(() => {});
+    try {
+      localStorage.setItem("sw-cart", JSON.stringify(cart));
+    } catch (e) {
+      // Speichern fehlgeschlagen, z.B. privater Modus
+    }
   }, [cart]);
 
   const filtered = useMemo(() => {
@@ -90,19 +141,59 @@ export default function Shop() {
     });
   const removeItem = (id) => setCart((c) => { const n = { ...c }; delete n[id]; return n; });
 
+  const sendOrder = async () => {
+    setSendError("");
+    if (!customerName.trim() || !customerEmail.trim()) {
+      setSendError("Bitte Name und E-Mail angeben.");
+      return;
+    }
+    setSending(true);
+    const orderDetails = cartItems
+      .map((i) => `${i.qty}x ${i.name} (${formatPrice(i.price)} pro Stück) = ${formatPrice(i.qty * i.price)}`)
+      .join("\n");
+    const itemsForDb = cartItems.map((i) => ({ name: i.name, qty: i.qty, price: i.price }));
+    try {
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        {
+          to_email: SHOP_OWNER_EMAIL,
+          customer_name: customerName,
+          customer_email: customerEmail,
+          order_details: orderDetails,
+          total: formatPrice(subtotal),
+        },
+        EMAILJS_PUBLIC_KEY
+      );
+      const { error: dbError } = await supabase.from("orders").insert({
+        customer_name: customerName,
+        customer_email: customerEmail,
+        items: itemsForDb,
+        total: subtotal,
+      });
+      if (dbError) console.error("Bestellung konnte nicht im Dashboard gespeichert werden:", dbError);
+      setCheckoutDone(true);
+      setCart({});
+    } catch (err) {
+      setSendError("Senden fehlgeschlagen. Bitte später erneut versuchen.");
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
     <div style={{ fontFamily: "var(--font-body)", color: "var(--ink)", background: "var(--bg)", minHeight: "100%" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
         :root {
-          --bg: #EDEEF1;
+          --bg: #F7F4EF;
           --surface: #FFFFFF;
-          --ink: #1B1D21;
-          --muted: #6B7280;
-          --accent: #FF6A13;
+          --ink: #2B2E4A;
+          --muted: #7A7A82;
+          --accent: #FF6F59;
           --accent-ink: #7A2E00;
           --accent2: #2F6FED;
-          --line: #D3D7DD;
+          --line: #E4DFD6;
           --font-display: 'Space Grotesk', sans-serif;
           --font-body: 'Inter', sans-serif;
           --font-mono: 'JetBrains Mono', monospace;
@@ -149,8 +240,8 @@ export default function Shop() {
           position: relative;
         }
         .sw-add-btn {
-          border: 1px solid var(--ink);
-          background: var(--ink);
+          border: 1px solid var(--accent);
+          background: var(--accent);
           color: #fff;
           font-family: var(--font-body);
           font-weight: 500;
@@ -162,7 +253,7 @@ export default function Shop() {
           align-items: center;
           gap: 6px;
         }
-        .sw-add-btn:hover { background: #000; }
+        .sw-add-btn:hover { background: #E85A44; border-color: #E85A44; }
         .sw-drawer {
           position: fixed;
           top: 0; right: 0; bottom: 0;
@@ -200,6 +291,8 @@ export default function Shop() {
           outline: none;
         }
         .sw-search:focus { border-color: var(--ink); }
+        .sw-spin { animation: sw-spin-anim 0.8s linear infinite; }
+        @keyframes sw-spin-anim { to { transform: rotate(360deg); } }
       `}</style>
 
       <div className="sw-root">
@@ -207,11 +300,9 @@ export default function Shop() {
         <header style={{ position: "sticky", top: 0, zIndex: 30, background: "var(--bg)", borderBottom: "1px solid var(--line)" }}>
           <div style={{ maxWidth: 1080, margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 34, height: 34, borderRadius: 8, background: "var(--ink)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Layers size={18} color="#fff" strokeWidth={2} />
-              </div>
+              <Logo size={38} withText={false} />
               <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20, letterSpacing: "-0.02em" }}>
-                SchichtWerk
+                SuchyPrints
               </span>
             </div>
 
@@ -244,7 +335,14 @@ export default function Shop() {
         </header>
 
         {/* Hero */}
-        <section style={{ maxWidth: 1080, margin: "0 auto", padding: "56px 24px 24px" }}>
+        <section style={{ maxWidth: 1080, margin: "0 auto", padding: "56px 24px 24px", position: "relative", overflow: "hidden" }}>
+          <Logo
+            size={380}
+            withText={false}
+            color="#2B2E4A"
+            accent="#2B2E4A"
+            style={{ position: "absolute", top: -90, right: -70, opacity: 0.05, transform: "rotate(-8deg)", pointerEvents: "none" }}
+          />
           <div style={{ position: "relative" }}>
             <div className={`sw-hero-reveal sw-layer-bg ${heroReady ? "ready" : ""}`} style={{ position: "absolute", inset: 0, opacity: 0.6 }} />
             <div style={{ position: "relative" }}>
@@ -330,6 +428,19 @@ export default function Shop() {
             </div>
           )}
         </section>
+
+        {/* Footer */}
+        <footer style={{ borderTop: "1px solid var(--line)", marginTop: 24 }}>
+          <div style={{ maxWidth: 1080, margin: "0 auto", padding: "36px 24px 44px", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
+            <Logo size={64} />
+            <div>
+              <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 16, margin: 0 }}>SuchyPrints</p>
+              <p style={{ color: "var(--muted)", fontSize: 13, margin: "4px 0 0" }}>
+                Handgefertigte 3D-Drucke · {SHOP_OWNER_EMAIL}
+              </p>
+            </div>
+          </div>
+        </footer>
       </div>
 
       {/* Warenkorb-Overlay + Drawer */}
@@ -372,22 +483,39 @@ export default function Shop() {
             <span style={{ fontFamily: "var(--font-mono)", fontWeight: 500, fontSize: 16 }}>{formatPrice(subtotal)}</span>
           </div>
           {checkoutDone ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center", padding: "12px 0", color: "#0F6E56" }}>
-              <Check size={16} /> <span style={{ fontSize: 14, fontWeight: 500 }}>Anfrage gesendet</span>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, justifyContent: "center", padding: "16px 0" }}>
+              <Logo size={40} withText={false} color="#0F6E56" accent="#0F6E56" />
+              <span style={{ fontSize: 14, fontWeight: 500, color: "#0F6E56", textAlign: "center" }}>Bestellung gesendet – du erhältst eine Bestätigung per E-Mail.</span>
             </div>
           ) : (
-            <button
-              disabled={cartItems.length === 0}
-              onClick={() => setCheckoutDone(true)}
-              className="sw-add-btn"
-              style={{ width: "100%", justifyContent: "center", background: cartItems.length === 0 ? "var(--muted)" : "var(--ink)", borderColor: cartItems.length === 0 ? "var(--muted)" : "var(--ink)", cursor: cartItems.length === 0 ? "not-allowed" : "pointer" }}
-            >
-              Bestellung anfragen
-            </button>
+            <>
+              <input
+                placeholder="Dein Name"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                style={{ width: "100%", border: "1px solid var(--line)", borderRadius: 8, padding: "9px 12px", fontSize: 13.5, fontFamily: "var(--font-body)", marginBottom: 8, outline: "none" }}
+              />
+              <input
+                placeholder="Deine E-Mail-Adresse"
+                type="email"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                style={{ width: "100%", border: "1px solid var(--line)", borderRadius: 8, padding: "9px 12px", fontSize: 13.5, fontFamily: "var(--font-body)", marginBottom: 10, outline: "none" }}
+              />
+              {sendError && (
+                <p style={{ color: "#A32D2D", fontSize: 12.5, marginBottom: 8 }}>{sendError}</p>
+              )}
+              <button
+                disabled={cartItems.length === 0 || sending}
+                onClick={sendOrder}
+                className="sw-add-btn"
+                style={{ width: "100%", justifyContent: "center", background: cartItems.length === 0 ? "var(--muted)" : "var(--ink)", borderColor: cartItems.length === 0 ? "var(--muted)" : "var(--ink)", cursor: cartItems.length === 0 ? "not-allowed" : "pointer" }}
+              >
+                {sending ? <Loader2 size={14} className="sw-spin" /> : <Send size={14} />}
+                {sending ? "Wird gesendet…" : "Bestellung senden"}
+              </button>
+            </>
           )}
-          <p style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 10, textAlign: "center" }}>
-            Demo – hier würde ein echter Zahlungsanbieter angebunden.
-          </p>
         </div>
       </div>
     </div>
