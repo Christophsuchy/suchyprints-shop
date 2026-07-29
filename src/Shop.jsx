@@ -412,7 +412,7 @@ export default function Shop() {
         <header style={{ position: "sticky", top: 0, zIndex: 30, background: "var(--surface)", borderBottom: "1px solid var(--line)" }}>
           <div style={{ maxWidth: 1080, margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Logo size={38} withText={false} />
+              <Logo size={46} withText={false} color={darkMode ? "#F2EBE3" : "#2B2E4A"} />
               <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20, letterSpacing: "-0.02em" }}>
                 SuchyPrints
               </span>
@@ -552,7 +552,7 @@ export default function Shop() {
         {/* Footer */}
         <footer style={{ borderTop: "1px solid var(--line)", marginTop: 24 }}>
           <div style={{ maxWidth: 1080, margin: "0 auto", padding: "36px 24px 44px", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
-            <Logo size={64} />
+            <Logo size={64} color={darkMode ? "#F2EBE3" : "#2B2E4A"} />
             <div>
               <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 16, margin: 0 }}>SuchyPrints</p>
               <p style={{ color: "var(--muted)", fontSize: 13, margin: "4px 0 0" }}>
@@ -569,7 +569,7 @@ export default function Shop() {
         <div style={{ height: 4, background: "linear-gradient(90deg, var(--accent-soft), var(--accent), var(--accent-dark))", flexShrink: 0 }} />
         <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Logo size={26} withText={false} />
+            <Logo size={26} withText={false} color={darkMode ? "#F2EBE3" : "#2B2E4A"} />
             <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>Warenkorb</span>
           </div>
           <button onClick={() => setCartOpen(false)} style={{ border: "none", background: "none", cursor: "pointer", padding: 4 }} aria-label="Schließen">
