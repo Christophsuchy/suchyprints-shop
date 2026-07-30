@@ -4,13 +4,14 @@ import emailjs from "@emailjs/browser";
 import { supabase } from "./supabaseClient";
 import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Loader2, Trash2, Sun, Moon, Truck, RotateCcw, ShieldCheck, ChevronDown, Tag, PenTool, Sparkles, Package, Mail, Quote } from "lucide-react";
 import { CATEGORIES, MATERIALS, PRODUCTS, TAG_LABELS, DISCOUNT_CODES, FAQS, formatPrice } from "./shopData";
+import ProductIllustration from "./ProductIllustration";
 import { EMAILJS_SERVICE_ID, EMAILJS_PUBLIC_KEY, SHOP_OWNER_EMAIL, EMAILJS_ORDER_TEMPLATE_ID } from "./emailConfig";
 
 const EMAILJS_TEMPLATE_ID = EMAILJS_ORDER_TEMPLATE_ID;
 
 // PayPal-Zugangsdaten – auf https://developer.paypal.com kostenlos anlegen,
 // eine App erstellen und hier die Client-ID eintragen.
-const PAYPAL_CLIENT_ID = "DEINE_PAYPAL_CLIENT_ID";
+const PAYPAL_CLIENT_ID = "BAAbt6-M-UrLXLYJs1vpSB0WndDVNMx5A2nnok-mVTllnZiRQnzAp9E7Mv1NLyb50Cd9zMQHYs28OIXpSI";
 
 // Rund-Logo als echte Vektorgrafik (kein Foto) – Kreis mit Druckkopf-Icon und Schriftzug,
 // mehrfach auf der Seite einsetzbar. `dim` steuert ob Ring-Text mitgerendert wird.
@@ -649,6 +650,9 @@ export default function Shop() {
                       <div className="sw-swatch">
                         <div className="sw-swatch-fill" style={{ background: p.hue, opacity: p.inStock ? 1 : 0.45 }}>
                           <div className="sw-layer-bg" style={{ position: "absolute", inset: 0, opacity: 0.18 }} />
+                          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <ProductIllustration id={p.id} size={isFeatured ? 130 : 84} color="rgba(255,255,255,0.92)" />
+                          </div>
                         </div>
                         {p.tag && p.inStock && (
                           <span
@@ -919,7 +923,11 @@ export default function Shop() {
           ) : (
             cartItems.map((item) => (
               <div key={item.id} style={{ display: "flex", gap: 12, padding: "14px 0", borderBottom: "1px solid var(--line)" }}>
-                <div style={{ width: 52, height: 52, borderRadius: 12, background: `linear-gradient(155deg, ${item.hue}, ${item.hue}cc)`, flexShrink: 0, boxShadow: "0 4px 10px rgba(0,0,0,0.12)" }} />
+                <div style={{ width: 52, height: 52, borderRadius: 12, background: `linear-gradient(155deg, ${item.hue}, ${item.hue}cc)`, flexShrink: 0, boxShadow: "0 4px 10px rgba(0,0,0,0.12)", position: "relative" }}>
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <ProductIllustration id={item.id} size={30} color="rgba(255,255,255,0.9)" />
+                  </div>
+                </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: 13.5, fontWeight: 500, margin: 0, lineHeight: 1.35 }}>{item.name}</p>
                   <p style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--muted)", margin: "4px 0 8px" }}>{formatPrice(item.price)}</p>
