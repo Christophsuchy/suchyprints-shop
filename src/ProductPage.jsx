@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Plus, Check } from "lucide-react";
 import { PRODUCTS, MATERIALS, formatPrice } from "./shopData";
 import { Logo } from "./Shop";
+import ProductIllustration from "./ProductIllustration";
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -55,6 +56,9 @@ export default function ProductPage() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40 }}>
           <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", height: 340, background: product.hue, opacity: product.inStock ? 1 : 0.5 }}>
             <div className="pp-layer-bg" style={{ position: "absolute", inset: 0 }} />
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <ProductIllustration id={product.id} size={220} color="rgba(255,255,255,0.92)" />
+            </div>
             {!product.inStock && (
               <span style={{ position: "absolute", top: 16, left: 16, background: "#7A7A82", color: "#fff", fontSize: 12, fontWeight: 700, padding: "6px 12px", borderRadius: 999 }}>
                 Ausverkauft
@@ -117,7 +121,11 @@ export default function ProductPage() {
               {related.map((r) => (
                 <Link key={r.id} to={`/produkt/${r.id}`} style={{ textDecoration: "none", color: "inherit" }}>
                   <div style={{ background: "#fff", border: "1px solid #E4DFD6", borderRadius: 12, overflow: "hidden" }}>
-                    <div style={{ height: 90, background: r.hue, opacity: r.inStock ? 1 : 0.5 }} />
+                    <div style={{ height: 90, background: r.hue, opacity: r.inStock ? 1 : 0.5, position: "relative" }}>
+                      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <ProductIllustration id={r.id} size={54} color="rgba(255,255,255,0.9)" />
+                      </div>
+                    </div>
                     <div style={{ padding: 12 }}>
                       <p style={{ fontSize: 13, fontWeight: 600, margin: "0 0 4px", lineHeight: 1.3 }}>{r.name}</p>
                       <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12.5, color: "#82431F", margin: 0 }}>{formatPrice(r.price)}</p>
