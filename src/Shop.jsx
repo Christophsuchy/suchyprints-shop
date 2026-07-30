@@ -1,19 +1,31 @@
 import React, { useState, useEffect, useMemo, useRef, useId } from "react";
+import { Link } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { supabase } from "./supabaseClient";
-import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Loader2, Trash2, Sun, Moon } from "lucide-react";
+import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Loader2, Trash2, Sun, Moon, Instagram, Truck, RotateCcw, ShieldCheck, ChevronDown, Tag, PenTool, Sparkles, Package, Mail, Quote } from "lucide-react";
+import { CATEGORIES, MATERIALS, PRODUCTS, TAG_LABELS, DISCOUNT_CODES, FAQS, formatPrice } from "./shopData";
+import { EMAILJS_SERVICE_ID, EMAILJS_PUBLIC_KEY, SHOP_OWNER_EMAIL, EMAILJS_ORDER_TEMPLATE_ID } from "./emailConfig";
 
-// EmailJS-Zugangsdaten – auf https://www.emailjs.com/ kostenlos anlegen
-// und hier die drei Werte aus deinem Account eintragen.
-const EMAILJS_SERVICE_ID = "service_tks1mei";
-const EMAILJS_TEMPLATE_ID = "template_ctsn259";
-const EMAILJS_PUBLIC_KEY = "GRw99PmWJicyivjXB";
-// Wohin die Bestellbenachrichtigung gehen soll (deine eigene Adresse):
-const SHOP_OWNER_EMAIL = "christoph.suchy@suchyprints.at";
+const EMAILJS_TEMPLATE_ID = EMAILJS_ORDER_TEMPLATE_ID;
+
+// PayPal-Zugangsdaten – auf https://developer.paypal.com kostenlos anlegen,
+// eine App erstellen und hier die Client-ID eintragen.
+const PAYPAL_CLIENT_ID = "DEINE_PAYPAL_CLIENT_ID";
 
 // Rund-Logo als echte Vektorgrafik (kein Foto) – Kreis mit Druckkopf-Icon und Schriftzug,
 // mehrfach auf der Seite einsetzbar. `dim` steuert ob Ring-Text mitgerendert wird.
-function Logo({ size = 44, withText = true, color = "#2B2E4A", accent = "#FF6F59", style }) {
+function TikTokIcon({ size = 16, color = "currentColor" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <path
+        d="M16.5 3c.4 2.1 1.8 3.6 4 3.9v3.1c-1.4 0-2.7-.4-3.9-1.2v6.4c0 3.2-2.6 5.8-5.8 5.8S5 17.4 5 14.2s2.6-5.8 5.8-5.8c.3 0 .6 0 .9.1v3.2c-.3-.1-.6-.2-.9-.2-1.4 0-2.6 1.2-2.6 2.6s1.2 2.6 2.6 2.6 2.7-1.1 2.7-2.6V3h3z"
+        fill={color}
+      />
+    </svg>
+  );
+}
+
+export function Logo({ size = 44, withText = true, color = "#2B2E4A", accent = "#FF6F59", style }) {
   const uid = useId().replace(/:/g, "");
   const topArcId = `logoTop-${uid}`;
   const bottomArcId = `logoBottom-${uid}`;
@@ -47,40 +59,6 @@ function Logo({ size = 44, withText = true, color = "#2B2E4A", accent = "#FF6F59
   );
 }
 
-const CATEGORIES = [
-  { id: "alle", label: "Alle", icon: Layers },
-  { id: "deko", label: "Deko", icon: Home },
-  { id: "technik", label: "Technik & Ersatzteile", icon: Cog },
-  { id: "spielzeug", label: "Spielzeug", icon: Gamepad2 },
-  { id: "individuell", label: "Individuell", icon: Wand2 },
-];
-
-const MATERIALS = {
-  PLA: { label: "PLA", color: "#FF6A13" },
-  PETG: { label: "PETG", color: "#2F6FED" },
-  TPU: { label: "TPU (flexibel)", color: "#1D9E75" },
-};
-
-// Startsortiment – einfach weitere Objekte in dieses Array einfügen, es gibt kein festes Limit.
-const PRODUCTS = [
-  { id: "p1", name: "Geometrische Vase, klein", category: "deko", material: "PLA", price: 18.5, hue: "#FF6A13" },
-  { id: "p2", name: "Wandregal-Halterung", category: "deko", material: "PETG", price: 12.0, hue: "#2F6FED" },
-  { id: "p3", name: "Teelicht-Set, 3 Stück", category: "deko", material: "PLA", price: 15.0, hue: "#D4537E" },
-  { id: "p4", name: "Kabelclip-Set (10x)", category: "technik", material: "PETG", price: 8.0, hue: "#2F6FED" },
-  { id: "p5", name: "Lüfterhalterung 40mm", category: "technik", material: "PETG", price: 6.5, hue: "#2F6FED" },
-  { id: "p6", name: "Werkzeug-Organizer", category: "technik", material: "PLA", price: 22.0, hue: "#FF6A13" },
-  { id: "p7", name: "Ersatz-Scharnier, universal", category: "technik", material: "TPU", price: 9.5, hue: "#1D9E75" },
-  { id: "p8", name: "Stapelbares Puzzle-Set", category: "spielzeug", material: "PLA", price: 14.0, hue: "#FF6A13" },
-  { id: "p9", name: "Beweglicher Drache (Fidget)", category: "spielzeug", material: "TPU", price: 19.0, hue: "#1D9E75" },
-  { id: "p10", name: "Mini-Katapult", category: "spielzeug", material: "PLA", price: 11.0, hue: "#D4537E" },
-  { id: "p11", name: "Schachfiguren-Set", category: "deko", material: "PLA", price: 34.0, hue: "#FF6A13" },
-  { id: "p12", name: "Handy-Ständer, klappbar", category: "technik", material: "PETG", price: 9.0, hue: "#2F6FED" },
-];
-
-function formatPrice(n) {
-  return n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
-}
-
 export default function Shop() {
   const [cart, setCart] = useState({});
   const [category, setCategory] = useState("alle");
@@ -93,6 +71,15 @@ export default function Shop() {
   const [customerEmail, setCustomerEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
+  const [paypalReady, setPaypalReady] = useState(false);
+  const paypalRef = useRef(null);
+  const searchInputRef = useRef(null);
+  const [discountCode, setDiscountCode] = useState("");
+  const [discountApplied, setDiscountApplied] = useState(null);
+  const [discountError, setDiscountError] = useState("");
+  const [openFaq, setOpenFaq] = useState(null);
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterStatus, setNewsletterStatus] = useState(null);
   const loaded = useRef(false);
 
   useEffect(() => {
@@ -123,6 +110,24 @@ export default function Shop() {
   }, [darkMode]);
 
   useEffect(() => {
+    if (window.paypal) {
+      setPaypalReady(true);
+      return;
+    }
+    const existing = document.getElementById("paypal-sdk");
+    if (existing) {
+      existing.addEventListener("load", () => setPaypalReady(true));
+      return;
+    }
+    const script = document.createElement("script");
+    script.id = "paypal-sdk";
+    script.src = `https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&currency=EUR`;
+    script.async = true;
+    script.onload = () => setPaypalReady(true);
+    document.body.appendChild(script);
+  }, []);
+
+  useEffect(() => {
     if (!loaded.current) return;
     try {
       localStorage.setItem("sw-cart", JSON.stringify(cart));
@@ -147,6 +152,34 @@ export default function Shop() {
 
   const cartCount = cartItems.reduce((s, i) => s + i.qty, 0);
   const subtotal = cartItems.reduce((s, i) => s + i.qty * i.price, 0);
+  const discountedTotal = discountApplied ? subtotal * (1 - discountApplied.percent) : subtotal;
+
+  const applyDiscountCode = () => {
+    const code = discountCode.trim().toUpperCase();
+    setDiscountError("");
+    if (!code) return;
+    if (DISCOUNT_CODES[code]) {
+      setDiscountApplied({ code, percent: DISCOUNT_CODES[code] });
+      setDiscountError("");
+    } else {
+      setDiscountApplied(null);
+      setDiscountError("Dieser Code ist ungültig oder abgelaufen.");
+    }
+  };
+
+  const subscribeNewsletter = async (e) => {
+    e.preventDefault();
+    if (!newsletterEmail.trim()) return;
+    setNewsletterStatus("sending");
+    try {
+      const { error } = await supabase.from("newsletter_subscribers").insert({ email: newsletterEmail.trim() });
+      if (error) throw error;
+      setNewsletterStatus("success");
+      setNewsletterEmail("");
+    } catch (err) {
+      setNewsletterStatus("error");
+    }
+  };
 
   const addToCart = (id) => setCart((c) => ({ ...c, [id]: (c[id] || 0) + 1 }));
   const changeQty = (id, delta) =>
@@ -156,12 +189,8 @@ export default function Shop() {
     });
   const removeItem = (id) => setCart((c) => { const n = { ...c }; delete n[id]; return n; });
 
-  const sendOrder = async () => {
+  const finalizeOrder = async (paypalTransactionId) => {
     setSendError("");
-    if (!customerName.trim() || !customerEmail.trim()) {
-      setSendError("Bitte Name und E-Mail angeben.");
-      return;
-    }
     setSending(true);
     const orderDetails = cartItems
       .map((i) => `${i.qty}x ${i.name} (${formatPrice(i.price)} pro Stück) = ${formatPrice(i.qty * i.price)}`)
@@ -176,7 +205,8 @@ export default function Shop() {
           customer_name: customerName,
           customer_email: customerEmail,
           order_details: orderDetails,
-          total: formatPrice(subtotal),
+          total: formatPrice(discountedTotal),
+          payment_info: `Bezahlt via PayPal (Transaktion ${paypalTransactionId})${discountApplied ? ` · Rabattcode ${discountApplied.code} (-${Math.round(discountApplied.percent * 100)}%)` : ""}`,
         },
         EMAILJS_PUBLIC_KEY
       );
@@ -184,17 +214,39 @@ export default function Shop() {
         customer_name: customerName,
         customer_email: customerEmail,
         items: itemsForDb,
-        total: subtotal,
+        total: discountedTotal,
+        payment_status: "bezahlt",
+        paypal_transaction_id: paypalTransactionId,
       });
       if (dbError) console.error("Bestellung konnte nicht im Dashboard gespeichert werden:", dbError);
       setCheckoutDone(true);
       setCart({});
     } catch (err) {
-      setSendError("Senden fehlgeschlagen. Bitte später erneut versuchen.");
+      setSendError("Zahlung erfolgt, aber Bestellung konnte nicht übermittelt werden. Bitte melde dich bei uns.");
     } finally {
       setSending(false);
     }
   };
+
+  useEffect(() => {
+    if (!paypalReady || !paypalRef.current || !window.paypal) return;
+    if (!customerName.trim() || !customerEmail.trim() || cartItems.length === 0 || checkoutDone) return;
+    paypalRef.current.innerHTML = "";
+    window.paypal
+      .Buttons({
+        style: { layout: "vertical", color: "black", shape: "pill", label: "paypal", height: 45 },
+        createOrder: (data, actions) =>
+          actions.order.create({
+            purchase_units: [{ amount: { value: discountedTotal.toFixed(2), currency_code: "EUR" } }],
+          }),
+        onApprove: async (data, actions) => {
+          const details = await actions.order.capture();
+          await finalizeOrder(details.id);
+        },
+        onError: () => setSendError("PayPal-Zahlung fehlgeschlagen. Bitte erneut versuchen."),
+      })
+      .render(paypalRef.current);
+  }, [paypalReady, customerName, customerEmail, discountedTotal, cartItems.length, checkoutDone]);
 
   return (
     <div className={`sw-app ${darkMode ? "dark" : ""}`} style={{ fontFamily: "var(--font-body)", color: "var(--ink)", background: "var(--bg)", minHeight: "100%" }}>
@@ -271,6 +323,20 @@ export default function Shop() {
           transition: clip-path 1.1s cubic-bezier(.16,1,.3,1);
         }
         .sw-hero-reveal.ready { clip-path: inset(0 0 0 0); }
+        .sw-cat-scroll {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .sw-cat-scroll::-webkit-scrollbar { display: none; }
+        .sw-cat-fade {
+          position: absolute;
+          top: 0;
+          right: 0;
+          bottom: 4px;
+          width: 40px;
+          background: linear-gradient(to right, transparent, var(--bg));
+          pointer-events: none;
+        }
         .sw-cat-btn {
           border: 1px solid var(--line);
           background: var(--surface);
@@ -322,10 +388,42 @@ export default function Shop() {
           overflow: hidden;
           display: flex;
           flex-direction: column;
+          transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
         }
+        .sw-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 14px 28px rgba(0,0,0,0.1);
+          border-color: var(--accent-soft);
+        }
+        .sw-card.featured {
+          grid-column: span 2;
+        }
+        .sw-card.featured .sw-swatch { height: 200px; }
         .sw-swatch {
           height: 128px;
           position: relative;
+          overflow: hidden;
+        }
+        .sw-swatch-fill {
+          position: absolute;
+          inset: 0;
+          transition: transform 0.35s ease;
+        }
+        .sw-card:hover .sw-swatch-fill {
+          transform: scale(1.08);
+        }
+        .sw-tag-ribbon {
+          position: absolute;
+          top: 10px;
+          left: 10px;
+          font-family: var(--font-body);
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.03em;
+          padding: 5px 10px;
+          border-radius: 999px;
+          z-index: 2;
+          box-shadow: 0 3px 8px rgba(0,0,0,0.18);
         }
         .sw-add-btn {
           border: 1px solid var(--accent);
@@ -421,9 +519,14 @@ export default function Shop() {
             <div style={{ position: "relative", display: "none" }} />
 
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div className={`sw-search-wrap ${query ? "has-value" : ""}`} style={{ position: "relative" }}>
+              <div
+                className={`sw-search-wrap ${query ? "has-value" : ""}`}
+                style={{ position: "relative" }}
+                onClick={() => searchInputRef.current && searchInputRef.current.focus()}
+              >
                 <Search size={15} color="var(--muted)" className="sw-search-icon" style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)" }} />
                 <input
+                  ref={searchInputRef}
                   className="sw-search"
                   placeholder="Produkt suchen…"
                   value={query}
@@ -481,20 +584,23 @@ export default function Shop() {
 
         {/* Kategorien */}
         <section id="produkte" style={{ maxWidth: 1080, margin: "0 auto", padding: "0 24px 8px", scrollMarginTop: 80 }}>
-          <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
-            {CATEGORIES.map((c) => {
-              const Icon = c.icon;
-              return (
-                <button
-                  key={c.id}
-                  className={`sw-cat-btn ${category === c.id ? "active" : ""}`}
-                  onClick={() => setCategory(c.id)}
-                >
-                  <span className="sw-cat-icon"><Icon size={12} /></span>
-                  {c.label}
-                </button>
-              );
+          <div style={{ position: "relative" }}>
+            <div className="sw-cat-scroll" style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
+              {CATEGORIES.map((c) => {
+                const Icon = c.icon;
+                return (
+                  <button
+                    key={c.id}
+                    className={`sw-cat-btn ${category === c.id ? "active" : ""}`}
+                    onClick={() => setCategory(c.id)}
+                  >
+                    <span className="sw-cat-icon"><Icon size={12} /></span>
+                    {c.label}
+                  </button>
+                );
             })}
+            </div>
+            <div className="sw-cat-fade" />
           </div>
         </section>
 
@@ -524,40 +630,251 @@ export default function Shop() {
             <p style={{ color: "var(--muted)", textAlign: "center", padding: "40px 0" }}>Keine Produkte gefunden.</p>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16 }}>
-              {filtered.map((p) => (
-                <div key={p.id} className="sw-card">
-                  <div className="sw-swatch" style={{ background: p.hue }}>
-                    <div className="sw-layer-bg" style={{ position: "absolute", inset: 0, opacity: 0.18 }} />
-                  </div>
-                  <div style={{ padding: "14px 14px 16px", display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
-                    <span style={{ fontSize: 11.5, fontWeight: 500, color: MATERIALS[p.material].color, fontFamily: "var(--font-mono)", letterSpacing: "0.03em" }}>
-                      {MATERIALS[p.material].label}
-                    </span>
-                    <p style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, margin: 0, lineHeight: 1.3 }}>
-                      {p.name}
-                    </p>
-                    <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 8 }}>
-                      <span style={{ fontFamily: "var(--font-mono)", fontWeight: 500, fontSize: 15 }}>{formatPrice(p.price)}</span>
-                      <button className="sw-add-btn" onClick={() => addToCart(p.id)}>
-                        <Plus size={13} /> Warenkorb
-                      </button>
+              {filtered.map((p) => {
+                const isFeatured = p.tag === "aktion";
+                const discountPct = p.originalPrice ? Math.round((1 - p.price / p.originalPrice) * 100) : 0;
+                return (
+                  <div key={p.id} className={`sw-card ${isFeatured ? "featured" : ""}`}>
+                    <Link to={`/produkt/${p.id}`} style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", flex: 1 }}>
+                      <div className="sw-swatch">
+                        <div className="sw-swatch-fill" style={{ background: p.hue, opacity: p.inStock ? 1 : 0.45 }}>
+                          <div className="sw-layer-bg" style={{ position: "absolute", inset: 0, opacity: 0.18 }} />
+                        </div>
+                        {p.tag && p.inStock && (
+                          <span
+                            className="sw-tag-ribbon"
+                            style={{
+                              background: TAG_LABELS[p.tag].bg,
+                              color: TAG_LABELS[p.tag].color,
+                              border: p.tag === "beliebt" ? "1px solid var(--line)" : "none",
+                            }}
+                          >
+                            {p.tag === "aktion" ? `-${discountPct}%` : TAG_LABELS[p.tag].label}
+                          </span>
+                        )}
+                        {!p.inStock && (
+                          <span className="sw-tag-ribbon" style={{ background: "var(--muted)", color: "#fff" }}>
+                            Ausverkauft
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ padding: "14px 14px 0", display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
+                        <span style={{ fontSize: 11.5, fontWeight: 500, color: MATERIALS[p.material].color, fontFamily: "var(--font-mono)", letterSpacing: "0.03em" }}>
+                          {MATERIALS[p.material].label}
+                        </span>
+                        <p style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: isFeatured ? 18 : 15, margin: 0, lineHeight: 1.3 }}>
+                          {p.name}
+                        </p>
+                      </div>
+                    </Link>
+                    <div style={{ padding: "8px 14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                        {p.originalPrice && (
+                          <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--muted)", textDecoration: "line-through" }}>
+                            {formatPrice(p.originalPrice)}
+                          </span>
+                        )}
+                        <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: 15, color: p.originalPrice ? "var(--accent-dark)" : "var(--ink)" }}>
+                          {formatPrice(p.price)}
+                        </span>
+                      </span>
+                      {p.inStock ? (
+                        <button className="sw-add-btn" onClick={() => addToCart(p.id)}>
+                          <Plus size={13} /> Warenkorb
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 500 }}>Ausverkauft</span>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
 
+        {/* Versand-Infos */}
+        <section style={{ maxWidth: 1080, margin: "0 auto", padding: "0 24px 48px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, border: "1px solid var(--line)", borderRadius: 14, padding: "22px 24px", background: "var(--surface)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 999, background: "rgba(168, 90, 50, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Truck size={16} color="var(--accent)" />
+              </div>
+              <div>
+                <p style={{ fontWeight: 600, fontSize: 13.5, margin: 0 }}>2–4 Werktage</p>
+                <p style={{ color: "var(--muted)", fontSize: 12, margin: "2px 0 0" }}>Versand innerhalb Österreichs</p>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 999, background: "rgba(168, 90, 50, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Tag size={16} color="var(--accent)" />
+              </div>
+              <div>
+                <p style={{ fontWeight: 600, fontSize: 13.5, margin: 0 }}>4,90 € Versand</p>
+                <p style={{ color: "var(--muted)", fontSize: 12, margin: "2px 0 0" }}>Gratis ab 50 € Bestellwert</p>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 999, background: "rgba(168, 90, 50, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <ShieldCheck size={16} color="var(--accent)" />
+              </div>
+              <div>
+                <p style={{ fontWeight: 600, fontSize: 13.5, margin: 0 }}>Sichere Zahlung</p>
+                <p style={{ color: "var(--muted)", fontSize: 12, margin: "2px 0 0" }}>Abwicklung über PayPal</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Making-of / Prozess */}
+        <section style={{ maxWidth: 1080, margin: "0 auto", padding: "0 24px 56px" }}>
+          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 24, marginBottom: 24, textAlign: "center" }}>
+            Vom Entwurf zum fertigen Objekt
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
+            {[
+              { icon: PenTool, title: "Design", text: "Jedes Objekt wird digital entworfen oder nach deinen Wünschen angepasst." },
+              { icon: Layers, title: "Druck", text: "Schicht für Schicht entsteht dein Objekt auf unseren FDM-Druckern." },
+              { icon: Sparkles, title: "Veredelung", text: "Stützstrukturen entfernen, Kanten glätten, auf Qualität prüfen." },
+              { icon: Package, title: "Versand", text: "Sorgfältig verpackt geht's zu dir nach Hause." },
+            ].map((step, idx) => (
+              <div key={idx} style={{ textAlign: "center", padding: "20px 16px" }}>
+                <div style={{ width: 52, height: 52, borderRadius: 999, background: "rgba(168, 90, 50, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+                  <step.icon size={22} color="var(--accent)" />
+                </div>
+                <p style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, margin: "0 0 6px" }}>{step.title}</p>
+                <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.6, margin: 0 }}>{step.text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Kundenstimmen – PLATZHALTER: bitte durch echte Bewertungen ersetzen, sobald vorhanden */}
+        <section style={{ maxWidth: 1080, margin: "0 auto", padding: "0 24px 56px" }}>
+          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 24, marginBottom: 24, textAlign: "center" }}>
+            Was Kund*innen sagen
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+            {[1, 2, 3].map((i) => (
+              <div key={i} style={{ background: "var(--surface)", border: "1px dashed var(--line)", borderRadius: 14, padding: 20 }}>
+                <Quote size={18} color="var(--accent)" style={{ marginBottom: 10 }} />
+                <p style={{ color: "var(--muted)", fontSize: 13.5, lineHeight: 1.6, margin: "0 0 12px", fontStyle: "italic" }}>
+                  Platzhalter für eine echte Kundenstimme – hier später eine reale Bewertung einfügen.
+                </p>
+                <p style={{ fontSize: 12.5, fontWeight: 600, margin: 0 }}>– Noch offen</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section style={{ maxWidth: 780, margin: "0 auto", padding: "0 24px 56px" }}>
+          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 24, marginBottom: 20, textAlign: "center" }}>
+            Häufige Fragen
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {FAQS.map((faq, idx) => {
+              const open = openFaq === idx;
+              return (
+                <div key={idx} style={{ border: "1px solid var(--line)", borderRadius: 12, background: "var(--surface)", overflow: "hidden" }}>
+                  <button
+                    onClick={() => setOpenFaq(open ? null : idx)}
+                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "var(--font-body)", fontSize: 14.5, fontWeight: 500, color: "var(--ink)" }}
+                  >
+                    {faq.q}
+                    <ChevronDown size={16} style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s ease", flexShrink: 0, color: "var(--muted)" }} />
+                  </button>
+                  {open && (
+                    <p style={{ padding: "0 18px 16px", margin: 0, color: "var(--muted)", fontSize: 13.5, lineHeight: 1.6 }}>
+                      {faq.a}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Newsletter */}
+        <section style={{ maxWidth: 1080, margin: "0 auto", padding: "0 24px 56px" }}>
+          <div style={{ background: "linear-gradient(135deg, var(--accent-soft), var(--accent-dark))", borderRadius: 18, padding: "36px 28px", textAlign: "center" }}>
+            <Mail size={26} color="#fff" style={{ marginBottom: 12 }} />
+            <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20, color: "#fff", margin: "0 0 6px" }}>
+              Nichts verpassen
+            </p>
+            <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 13.5, margin: "0 0 20px" }}>
+              Neue Produkte und Aktionen direkt per Mail – kein Spam, versprochen.
+            </p>
+            {newsletterStatus === "success" ? (
+              <p style={{ color: "#fff", fontWeight: 500, fontSize: 14 }}>✓ Danke fürs Anmelden!</p>
+            ) : (
+              <form onSubmit={subscribeNewsletter} style={{ display: "flex", gap: 8, maxWidth: 380, margin: "0 auto", flexWrap: "wrap", justifyContent: "center" }}>
+                <input
+                  type="email"
+                  required
+                  placeholder="Deine E-Mail-Adresse"
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  style={{ flex: 1, minWidth: 200, border: "none", borderRadius: 999, padding: "11px 16px", fontSize: 13.5, fontFamily: "var(--font-body)", outline: "none" }}
+                />
+                <button
+                  type="submit"
+                  disabled={newsletterStatus === "sending"}
+                  style={{ background: "#fff", color: "var(--accent-dark)", border: "none", borderRadius: 999, padding: "11px 22px", fontWeight: 600, fontSize: 13.5, cursor: "pointer" }}
+                >
+                  {newsletterStatus === "sending" ? "…" : "Anmelden"}
+                </button>
+              </form>
+            )}
+            {newsletterStatus === "error" && (
+              <p style={{ color: "#fff", fontSize: 12.5, marginTop: 10 }}>Da ist etwas schiefgelaufen. Bitte später erneut versuchen.</p>
+            )}
+          </div>
+        </section>
+
         {/* Footer */}
         <footer style={{ borderTop: "1px solid var(--line)", marginTop: 24 }}>
-          <div style={{ maxWidth: 1080, margin: "0 auto", padding: "36px 24px 44px", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
-            <Logo size={64} color={darkMode ? "#F2EBE3" : "#2B2E4A"} />
-            <div>
-              <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 16, margin: 0 }}>SuchyPrints</p>
-              <p style={{ color: "var(--muted)", fontSize: 13, margin: "4px 0 0" }}>
-                Handgefertigte 3D-Drucke · {SHOP_OWNER_EMAIL}
-              </p>
+          <div style={{ maxWidth: 1080, margin: "0 auto", padding: "36px 24px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 18, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+              <Logo size={64} color={darkMode ? "#F2EBE3" : "#2B2E4A"} />
+              <div>
+                <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 16, margin: 0 }}>SuchyPrints</p>
+                <p style={{ color: "var(--muted)", fontSize: 13, margin: "4px 0 0" }}>
+                  Handgefertigte 3D-Drucke
+                </p>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+              <a
+                href="https://www.instagram.com/suchy_prints"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Instagram"
+                style={{ width: 36, height: 36, borderRadius: 999, border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink)" }}
+              >
+                <Instagram size={16} />
+              </a>
+              <a
+                href="https://www.tiktok.com/@suchyprints"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="TikTok"
+                style={{ width: 36, height: 36, borderRadius: 999, border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink)" }}
+              >
+                <TikTokIcon size={15} />
+              </a>
+            </div>
+          </div>
+          <div style={{ maxWidth: 1080, margin: "0 auto", padding: "16px 24px 32px", borderTop: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <p style={{ color: "var(--muted)", fontSize: 12, margin: 0 }}>
+              © {new Date().getFullYear()} SuchyPrints
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
+              <Link to="/impressum" style={{ color: "var(--muted)", fontSize: 12.5, textDecoration: "none" }}>Impressum</Link>
+              <Link to="/datenschutz" style={{ color: "var(--muted)", fontSize: 12.5, textDecoration: "none" }}>Datenschutz</Link>
+              <Link to="/agb" style={{ color: "var(--muted)", fontSize: 12.5, textDecoration: "none" }}>AGB</Link>
+              <Link to="/widerruf" style={{ color: "var(--muted)", fontSize: 12.5, textDecoration: "none" }}>Widerruf</Link>
+              <Link to="/kontakt" style={{ color: "var(--muted)", fontSize: 12.5, textDecoration: "none" }}>Kontakt</Link>
             </div>
           </div>
         </footer>
@@ -613,10 +930,50 @@ export default function Shop() {
         </div>
 
         <div style={{ padding: "16px 20px 20px", borderTop: "1px solid var(--line)" }}>
+          {!checkoutDone && cartItems.length > 0 && (
+            <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+              <div style={{ position: "relative", flex: 1 }}>
+                <Tag size={13} color="var(--muted)" style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)" }} />
+                <input
+                  placeholder="Rabattcode"
+                  value={discountCode}
+                  onChange={(e) => setDiscountCode(e.target.value)}
+                  style={{ width: "100%", border: "1px solid var(--line)", borderRadius: 10, padding: "9px 12px 9px 30px", fontSize: 13, fontFamily: "var(--font-body)", outline: "none" }}
+                />
+              </div>
+              <button
+                onClick={applyDiscountCode}
+                style={{ border: "1px solid var(--line)", background: "var(--surface)", borderRadius: 10, padding: "0 16px", fontSize: 13, fontWeight: 500, cursor: "pointer", color: "var(--ink)" }}
+              >
+                Anwenden
+              </button>
+            </div>
+          )}
+          {discountError && <p style={{ color: "#A32D2D", fontSize: 12, marginTop: -6, marginBottom: 10 }}>{discountError}</p>}
+          {discountApplied && (
+            <p style={{ color: "#0F6E56", fontSize: 12, marginTop: -6, marginBottom: 10 }}>
+              Code „{discountApplied.code}" angewendet: -{Math.round(discountApplied.percent * 100)}%
+            </p>
+          )}
+
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, padding: "10px 14px", borderRadius: 12, background: "rgba(168, 90, 50, 0.08)" }}>
             <span style={{ fontSize: 13.5, color: "var(--ink)", fontWeight: 500 }}>Zwischensumme</span>
-            <span style={{ fontFamily: "var(--font-mono)", fontWeight: 600, fontSize: 17, color: "var(--accent-dark)" }}>{formatPrice(subtotal)}</span>
+            <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              {discountApplied && (
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--muted)", textDecoration: "line-through" }}>{formatPrice(subtotal)}</span>
+              )}
+              <span style={{ fontFamily: "var(--font-mono)", fontWeight: 600, fontSize: 17, color: "var(--accent-dark)" }}>{formatPrice(discountedTotal)}</span>
+            </span>
           </div>
+
+          {!checkoutDone && (
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14, gap: 6 }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--muted)" }}><ShieldCheck size={13} /> Sichere Zahlung</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--muted)" }}><Truck size={13} /> 2–4 Werktage</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--muted)" }}><RotateCcw size={13} /> AT handgefertigt</span>
+            </div>
+          )}
+
           {checkoutDone ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, justifyContent: "center", padding: "16px 0" }}>
               <Logo size={40} withText={false} color="#0F6E56" accent="#0F6E56" />
@@ -640,20 +997,21 @@ export default function Shop() {
               {sendError && (
                 <p style={{ color: "#A32D2D", fontSize: 12.5, marginBottom: 8 }}>{sendError}</p>
               )}
-              <button
-                disabled={cartItems.length === 0 || sending}
-                onClick={sendOrder}
-                style={{
-                  width: "100%", justifyContent: "center", display: "flex", alignItems: "center", gap: 8,
-                  padding: "12px 0", borderRadius: 999, border: "none", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 14.5, color: "#fff",
-                  background: cartItems.length === 0 ? "var(--muted)" : "linear-gradient(135deg, var(--accent-soft), var(--accent-dark))",
-                  cursor: cartItems.length === 0 ? "not-allowed" : "pointer",
-                  boxShadow: cartItems.length === 0 ? "none" : "0 8px 18px rgba(130, 67, 31, 0.32)",
-                }}
-              >
-                {sending ? <Loader2 size={14} className="sw-spin" /> : <Send size={14} />}
-                {sending ? "Wird gesendet…" : "Bestellung senden"}
-              </button>
+              {sending && (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 0", color: "var(--muted)", fontSize: 13.5 }}>
+                  <Loader2 size={14} className="sw-spin" /> Bestellung wird übermittelt…
+                </div>
+              )}
+              {!customerName.trim() || !customerEmail.trim() ? (
+                <p style={{ color: "var(--muted)", fontSize: 12.5, textAlign: "center", padding: "10px 0" }}>
+                  Bitte Name und E-Mail ausfüllen, um mit PayPal zu bezahlen.
+                </p>
+              ) : !paypalReady ? (
+                <p style={{ color: "var(--muted)", fontSize: 12.5, textAlign: "center", padding: "10px 0" }}>
+                  PayPal wird geladen…
+                </p>
+              ) : null}
+              <div ref={paypalRef} style={{ display: sending ? "none" : "block" }} />
             </>
           )}
         </div>
