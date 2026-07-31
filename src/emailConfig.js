@@ -11,4 +11,4 @@ export const EMAILJS_ORDER_TEMPLATE_ID = "template_ctsn259";
 
 // Eigenes Template fürs Kontaktformular – in EmailJS neu anlegen und ID hier eintragen.
 // Empfohlener Inhalt: {{from_name}}, {{from_email}}, {{message}}
-export const EMAILJS_CONTACT_TEMPLATE_ID = "DEINE_KONTAKT_TEMPLATE_ID";
+export const EMAILJS_CONTACT_TEMPLATE_ID = "template_7urf91n";
