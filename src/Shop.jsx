@@ -411,7 +411,7 @@ export default function Shop() {
         }
         .sw-card.featured .sw-swatch { height: 200px; }
         .sw-swatch {
-          height: 128px;
+          height: 108px;
           position: relative;
           overflow: hidden;
         }
@@ -628,9 +628,14 @@ export default function Shop() {
                   Schick uns dein Modell (STL) oder deine Idee – wir kalkulieren Material, Zeit und Preis individuell.
                 </p>
               </div>
-              <button className="sw-add-btn" style={{ background: "var(--accent)", borderColor: "var(--accent)" }}>
+              <Link
+                to="/kontakt"
+                state={{ prefill: "Ich hätte gern folgendes individuelles Objekt drucken lassen: " }}
+                className="sw-add-btn"
+                style={{ background: "var(--accent)", borderColor: "var(--accent)", textDecoration: "none" }}
+              >
                 <Send size={14} /> Anfrage stellen
-              </button>
+              </Link>
             </div>
           </section>
         )}
@@ -640,7 +645,7 @@ export default function Shop() {
           {filtered.length === 0 ? (
             <p style={{ color: "var(--muted)", textAlign: "center", padding: "40px 0" }}>Keine Produkte gefunden.</p>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 12 }}>
               {filtered.map((p) => {
                 const isFeatured = p.tag === "aktion";
                 const discountPct = p.originalPrice ? Math.round((1 - p.price / p.originalPrice) * 100) : 0;
@@ -672,7 +677,7 @@ export default function Shop() {
                           </span>
                         )}
                       </div>
-                      <div style={{ padding: "14px 14px 0", display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
+                      <div style={{ padding: "10px 10px 0", display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
                         <span style={{ fontSize: 11.5, fontWeight: 500, color: MATERIALS[p.material].color, fontFamily: "var(--font-mono)", letterSpacing: "0.03em" }}>
                           {MATERIALS[p.material].label}
                         </span>
@@ -681,7 +686,7 @@ export default function Shop() {
                         </p>
                       </div>
                     </Link>
-                    <div style={{ padding: "8px 14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ padding: "6px 10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 6 }}>
                       <span style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
                         {p.originalPrice && (
                           <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--muted)", textDecoration: "line-through" }}>

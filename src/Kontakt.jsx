@@ -1,13 +1,14 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { ArrowLeft, Send, Check, Loader2 } from "lucide-react";
 import { EMAILJS_SERVICE_ID, EMAILJS_PUBLIC_KEY, SHOP_OWNER_EMAIL, EMAILJS_CONTACT_TEMPLATE_ID } from "./emailConfig";
 
 export default function Kontakt() {
+  const location = useLocation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(location.state?.prefill || "");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
@@ -75,6 +76,9 @@ export default function Kontakt() {
               rows={6}
               style={{ ...inputStyle, resize: "vertical", fontFamily: "'Inter', sans-serif" }}
             />
+            <p style={{ color: "#7A7A82", fontSize: 12, marginTop: -8, marginBottom: 14 }}>
+              Fotos, Skizzen oder Maße kannst du uns einfach als Antwort auf unsere Bestätigungs-E-Mail schicken.
+            </p>
             {error && <p style={{ color: "#A32D2D", fontSize: 13, marginBottom: 12 }}>{error}</p>}
             <button
               disabled={sending}
