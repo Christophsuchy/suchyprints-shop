@@ -233,7 +233,8 @@ export default function Shop() {
       setCheckoutDone(true);
       setCart({});
     } catch (err) {
-      setSendError("Zahlung erfolgt, aber Bestellung konnte nicht übermittelt werden. Bitte melde dich bei uns.");
+      const details = (err && (err.text || err.message)) || JSON.stringify(err);
+      setSendError(`Zahlung erfolgt, aber Bestellung konnte nicht übermittelt werden. Fehlerdetails: ${details}`);
     } finally {
       setSending(false);
     }
@@ -1018,7 +1019,7 @@ export default function Shop() {
                 style={{ width: "100%", border: "1px solid var(--line)", borderRadius: 10, padding: "10px 14px", fontSize: 13.5, fontFamily: "var(--font-body)", marginBottom: 10, outline: "none" }}
               />
               {sendError && (
-                <p style={{ color: "#A32D2D", fontSize: 12.5, marginBottom: 8 }}>{sendError}</p>
+                <p style={{ color: "#A32D2D", fontSize: 12.5, marginBottom: 8, wordBreak: "break-word" }}>{sendError}</p>
               )}
               {sending && (
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 0", color: "var(--muted)", fontSize: 13.5 }}>
