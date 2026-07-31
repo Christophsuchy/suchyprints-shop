@@ -108,6 +108,7 @@ export default function Shop() {
     } catch (e) {
       // kein gespeichertes Farbschema vorhanden
     }
+    emailjs.init(EMAILJS_PUBLIC_KEY);
     const t = setTimeout(() => setHeroReady(true), 50);
     return () => clearTimeout(t);
   }, []);
@@ -218,8 +219,7 @@ export default function Shop() {
           order_details: orderDetails,
           total: formatPrice(discountedTotal),
           payment_info: `Bezahlt via PayPal (Transaktion ${paypalTransactionId})${discountApplied ? ` · Rabattcode ${discountApplied.code} (-${Math.round(discountApplied.percent * 100)}%)` : ""}`,
-        },
-        EMAILJS_PUBLIC_KEY
+        }
       );
       const { error: dbError } = await supabase.from("orders").insert({
         customer_name: customerName,

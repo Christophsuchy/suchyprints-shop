@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { ArrowLeft, Send, Check, Loader2 } from "lucide-react";
@@ -12,6 +12,10 @@ export default function Kontakt() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+  }, []);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -30,8 +34,7 @@ export default function Kontakt() {
           from_name: name,
           from_email: email,
           message,
-        },
-        EMAILJS_PUBLIC_KEY
+        }
       );
       setSent(true);
     } catch (err) {
