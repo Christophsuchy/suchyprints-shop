@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useId } from "react";
 import { Link } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { supabase } from "./supabaseClient";
-import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Loader2, Trash2, Sun, Moon, Truck, RotateCcw, ShieldCheck, ChevronDown, Tag, PenTool, Sparkles, Package, Mail, Quote } from "lucide-react";
+import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Loader2, Trash2, Sun, Moon, Truck, RotateCcw, ShieldCheck, ChevronDown, Tag, PenTool, Sparkles, Package, Mail, Quote, Star } from "lucide-react";
 import { CATEGORIES, MATERIALS, PRODUCTS, TAG_LABELS, DISCOUNT_CODES, FAQS, formatPrice } from "./shopData";
 import ProductIllustration from "./ProductIllustration";
 import { EMAILJS_SERVICE_ID, EMAILJS_PUBLIC_KEY, SHOP_OWNER_EMAIL, EMAILJS_ORDER_TEMPLATE_ID } from "./emailConfig";
@@ -91,6 +91,7 @@ export default function Shop() {
   const [openFaq, setOpenFaq] = useState(null);
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterStatus, setNewsletterStatus] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const loaded = useRef(false);
 
   useEffect(() => {
@@ -109,6 +110,15 @@ export default function Shop() {
       // kein gespeichertes Farbschema vorhanden
     }
     emailjs.init(EMAILJS_PUBLIC_KEY);
+    supabase
+      .from("reviews")
+      .select("customer_name, rating, text")
+      .eq("approved", true)
+      .order("created_at", { ascending: false })
+      .limit(3)
+      .then(({ data }) => {
+        if (data) setReviews(data);
+      });
     const t = setTimeout(() => setHeroReady(true), 50);
     return () => clearTimeout(t);
   }, []);
@@ -209,6 +219,24 @@ export default function Shop() {
       .join("\n");
     const itemsForDb = cartItems.map((i) => ({ name: i.name, qty: i.qty, price: i.price }));
     try {
+      const { data: insertedOrder, error: dbError } = await supabase
+        .from("orders")
+        .insert({
+          customer_name: customerName,
+          customer_email: customerEmail,
+          items: itemsForDb,
+          total: discountedTotal,
+          payment_status: "bezahlt",
+          paypal_transaction_id: paypalTransactionId,
+        })
+        .select()
+        .single();
+      if (dbError) console.error("Bestellung konnte nicht im Dashboard gespeichert werden:", dbError);
+
+      const reviewLink = insertedOrder?.review_token
+        ? `https://suchyprints.at/bewertung/${insertedOrder.review_token}`
+        : "";
+
       await emailjs.send(
         EMAILJS_SERVICE_ID,
         EMAILJS_TEMPLATE_ID,
@@ -219,17 +247,10 @@ export default function Shop() {
           order_details: orderDetails,
           total: formatPrice(discountedTotal),
           payment_info: `Bezahlt via PayPal (Transaktion ${paypalTransactionId})${discountApplied ? ` · Rabattcode ${discountApplied.code} (-${Math.round(discountApplied.percent * 100)}%)` : ""}`,
+          review_link: reviewLink,
         }
       );
-      const { error: dbError } = await supabase.from("orders").insert({
-        customer_name: customerName,
-        customer_email: customerEmail,
-        items: itemsForDb,
-        total: discountedTotal,
-        payment_status: "bezahlt",
-        paypal_transaction_id: paypalTransactionId,
-      });
-      if (dbError) console.error("Bestellung konnte nicht im Dashboard gespeichert werden:", dbError);
+
       setCheckoutDone(true);
       setCart({});
     } catch (err) {
@@ -775,15 +796,31 @@ export default function Shop() {
             Was Kund*innen sagen
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
-            {[1, 2, 3].map((i) => (
-              <div key={i} style={{ background: "var(--surface)", border: "1px dashed var(--line)", borderRadius: 14, padding: 20 }}>
-                <Quote size={18} color="var(--accent)" style={{ marginBottom: 10 }} />
-                <p style={{ color: "var(--muted)", fontSize: 13.5, lineHeight: 1.6, margin: "0 0 12px", fontStyle: "italic" }}>
-                  Platzhalter für eine echte Kundenstimme – hier später eine reale Bewertung einfügen.
-                </p>
-                <p style={{ fontSize: 12.5, fontWeight: 600, margin: 0 }}>– Noch offen</p>
-              </div>
-            ))}
+            {reviews.length > 0
+              ? reviews.map((r, i) => (
+                  <div key={i} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: 20 }}>
+                    <div style={{ display: "flex", gap: 2, marginBottom: 10 }}>
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <Star key={n} size={14} fill={n <= r.rating ? "var(--accent)" : "none"} color="var(--accent)" />
+                      ))}
+                    </div>
+                    {r.text && (
+                      <p style={{ color: "var(--muted)", fontSize: 13.5, lineHeight: 1.6, margin: "0 0 12px", fontStyle: "italic" }}>
+                        „{r.text}"
+                      </p>
+                    )}
+                    <p style={{ fontSize: 12.5, fontWeight: 600, margin: 0 }}>– {r.customer_name}</p>
+                  </div>
+                ))
+              : [1, 2, 3].map((i) => (
+                  <div key={i} style={{ background: "var(--surface)", border: "1px dashed var(--line)", borderRadius: 14, padding: 20 }}>
+                    <Quote size={18} color="var(--accent)" style={{ marginBottom: 10 }} />
+                    <p style={{ color: "var(--muted)", fontSize: 13.5, lineHeight: 1.6, margin: "0 0 12px", fontStyle: "italic" }}>
+                      Platzhalter für eine echte Kundenstimme – hier später eine reale Bewertung einfügen.
+                    </p>
+                    <p style={{ fontSize: 12.5, fontWeight: 600, margin: 0 }}>– Noch offen</p>
+                  </div>
+                ))}
           </div>
         </section>
 
