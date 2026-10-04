@@ -49,6 +49,10 @@ export default function ProductPage() {
     <div style={{ fontFamily: "'Inter', sans-serif", minHeight: "100vh", background: "#F7F4EF", color: "#2B2E4A" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+.pp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+        @media (max-width: 700px) {
+          .pp-grid { grid-template-columns: 1fr; gap: 24px; }
+        }
         .pp-layer-bg {
           background-image: repeating-linear-gradient(to bottom, transparent 0px, transparent 5px, rgba(0,0,0,0.08) 5px, rgba(0,0,0,0.08) 6px);
         }
@@ -62,7 +66,7 @@ export default function ProductPage() {
           <Logo size={34} withText={false} />
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40 }}>
+        <div className="pp-grid">
           {media.length ? (
             <div>
               <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", aspectRatio: "1 / 1", background: "#F7F4EF", border: "1px solid #E4DFD6" }}>
