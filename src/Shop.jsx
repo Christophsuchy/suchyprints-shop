@@ -173,6 +173,7 @@ export default function Shop() {
   const countFertig = PRODUCTS.filter((p) => p.category !== "individuell").length;
   const countIndividuell = PRODUCTS.filter((p) => p.category === "individuell").length;
   const SUB_CATEGORIES = CATEGORIES.filter((c) => c.id !== "individuell");
+  const ActiveCatIcon = (SUB_CATEGORIES.find((c) => c.id === category) || SUB_CATEGORIES[0]).icon;
 
   const cartItems = useMemo(() => {
     return Object.entries(cart)
@@ -322,7 +323,6 @@ export default function Shop() {
           background: var(--surface);
         }
         .sw-app.dark .sw-search-wrap,
-        .sw-app.dark .sw-cat-btn,
         .sw-app.dark .sw-qty-btn {
           background: var(--surface);
           color: var(--ink);
@@ -364,20 +364,6 @@ export default function Shop() {
           transition: clip-path 1.1s cubic-bezier(.16,1,.3,1);
         }
         .sw-hero-reveal.ready { clip-path: inset(0 0 0 0); }
-        .sw-cat-scroll {
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-        .sw-cat-scroll::-webkit-scrollbar { display: none; }
-        .sw-cat-fade {
-          position: absolute;
-          top: 0;
-          right: 0;
-          bottom: 4px;
-          width: 40px;
-          background: linear-gradient(to right, transparent, var(--bg));
-          pointer-events: none;
-        }
         .sw-mode-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -415,12 +401,6 @@ export default function Shop() {
         .sw-mode-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
         .sw-mode-title { font-family: var(--font-display); font-weight: 700; font-size: 17px; }
         .sw-mode-sub { color: var(--muted); font-size: 12.5px; line-height: 1.35; }
-        .sw-cat-wrap {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          margin-top: 18px;
-        }
         @media (max-width: 600px) {
           .sw-mode-grid { gap: 10px; margin-top: -28px; }
           .sw-mode-card { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px; }
@@ -428,49 +408,58 @@ export default function Shop() {
           .sw-mode-title { font-size: 15px; }
           .sw-mode-sub { font-size: 11.5px; }
         }
-        .sw-cat-btn {
-          border: 1px solid var(--line);
-          background: var(--surface);
-          color: var(--muted);
-          font-family: var(--font-body);
-          font-size: 13.5px;
-          font-weight: 500;
-          padding: 7px 16px 7px 7px;
-          border-radius: 999px;
+        .sw-cat-bar {
           display: flex;
           align-items: center;
-          gap: 8px;
+          justify-content: space-between;
+          gap: 12px;
+          margin-top: 20px;
+        }
+        .sw-select {
+          position: relative;
+          display: flex;
+          align-items: center;
+          min-width: 240px;
+        }
+        .sw-select select {
+          appearance: none;
+          -webkit-appearance: none;
+          width: 100%;
+          font: inherit;
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--ink);
+          background: var(--surface);
+          border: 1px solid var(--line);
+          border-radius: 12px;
+          padding: 11px 42px 11px 48px;
           cursor: pointer;
-          white-space: nowrap;
-          transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+          transition: border-color .15s, box-shadow .15s;
         }
-        .sw-cat-btn:hover {
-          border-color: var(--accent-soft);
-          transform: translateY(-2px);
-          box-shadow: 0 6px 14px rgba(168, 90, 50, 0.14);
+        .sw-select select:hover { border-color: var(--accent-soft); }
+        .sw-select select:focus-visible {
+          outline: none;
+          border-color: var(--accent);
+          box-shadow: 0 0 0 3px rgba(168, 90, 50, 0.18);
         }
-        .sw-cat-icon {
-          width: 24px;
-          height: 24px;
-          border-radius: 999px;
+        .sw-select-icon {
+          position: absolute;
+          left: 9px;
+          width: 28px; height: 28px; border-radius: 8px;
+          display: flex; align-items: center; justify-content: center;
           background: rgba(168, 90, 50, 0.12);
           color: var(--accent);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          transition: background 0.18s ease, color 0.18s ease;
+          pointer-events: none;
         }
-        .sw-cat-btn.active {
-          background: linear-gradient(135deg, var(--accent-soft), var(--accent));
-          border-color: var(--accent);
-          color: #fff;
-          transform: translateY(-1px);
-          box-shadow: 0 8px 18px rgba(130, 67, 31, 0.32);
+        .sw-select-chevron {
+          position: absolute;
+          right: 14px;
+          color: var(--muted);
+          pointer-events: none;
         }
-        .sw-cat-btn.active .sw-cat-icon {
-          background: rgba(255,255,255,0.25);
-          color: #fff;
+        .sw-cat-count { color: var(--muted); font-size: 13px; white-space: nowrap; }
+        @media (max-width: 600px) {
+          .sw-select { flex: 1; min-width: 0; }
         }
         .sw-card {
           background: var(--surface);
@@ -666,9 +655,6 @@ export default function Shop() {
             <p style={{ color: "rgba(255,255,255,0.88)", fontSize: 15.5, maxWidth: 480, marginTop: 16, lineHeight: 1.6 }}>
               Handgefertigte 3D-Drucke aus dem Werkstattregal – von Deko über Ersatzteile bis zu deinem eigenen Entwurf.
             </p>
-            <a href="#produkte" className="sw-pill-btn" style={{ marginTop: 28 }}>
-              Zu den Produkten
-            </a>
           </div>
         </section>
 
@@ -697,22 +683,29 @@ export default function Shop() {
             </button>
           </div>
 
-          {/* Unterkategorien nur bei fertigen Produkten */}
+          {/* Unterkategorie (nur bei fertigen Produkten) */}
           {mode === "fertig" && !query && (
-            <div className="sw-cat-wrap">
-              {SUB_CATEGORIES.map((c) => {
-                const Icon = c.icon;
-                return (
-                  <button
-                    key={c.id}
-                    className={`sw-cat-btn ${category === c.id ? "active" : ""}`}
-                    onClick={() => setCategory(c.id)}
-                  >
-                    <span className="sw-cat-icon"><Icon size={12} /></span>
-                    {c.label}
-                  </button>
-                );
-              })}
+            <div className="sw-cat-bar">
+              <div className="sw-select">
+                <span className="sw-select-icon">
+                  <ActiveCatIcon size={15} />
+                </span>
+                <select
+                  aria-label="Kategorie wählen"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                >
+                  {SUB_CATEGORIES.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.id === "alle" ? "Alle Kategorien" : c.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={16} className="sw-select-chevron" />
+              </div>
+              <span className="sw-cat-count">
+                {filtered.length} Artikel
+              </span>
             </div>
           )}
 
