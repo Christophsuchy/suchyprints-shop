@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { supabase } from "./supabaseClient";
 import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Loader2, Trash2, Sun, Moon, Truck, RotateCcw, ShieldCheck, ChevronDown, Tag, PenTool, Sparkles, Package, Mail, Star } from "lucide-react";
-import { CATEGORIES, MATERIALS, PRODUCTS, TAG_LABELS, DISCOUNT_CODES, FAQS, formatPrice } from "./shopData";
+import { CATEGORIES, MATERIALS, PRODUCTS, TAG_LABELS, DISCOUNT_CODES, FAQS, SHOP_OPEN, formatPrice } from "./shopData";
 import ProductIllustration from "./ProductIllustration";
 import { EMAILJS_SERVICE_ID, EMAILJS_PUBLIC_KEY, SHOP_OWNER_EMAIL, EMAILJS_ORDER_TEMPLATE_ID } from "./emailConfig";
 
@@ -411,6 +411,32 @@ export default function Shop() {
           .sw-mode-title { font-size: 15px; }
           .sw-mode-sub { font-size: 11.5px; }
         }
+        .sw-launch-bar {
+          background: linear-gradient(90deg, var(--accent-dark), var(--accent));
+          color: #fff;
+          font-size: 13px;
+          padding: 9px 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 6px 14px;
+          text-align: center;
+        }
+        .sw-launch-text { display: inline-flex; align-items: center; gap: 7px; }
+        .sw-launch-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          color: #fff;
+          font-weight: 600;
+          text-decoration: underline;
+          text-underline-offset: 3px;
+        }
+        .sw-launch-link:hover { opacity: 0.85; }
+        @media (max-width: 600px) {
+          .sw-launch-bar { font-size: 12px; padding: 8px 12px; }
+        }
         .sw-cat-bar {
           display: flex;
           align-items: center;
@@ -590,6 +616,24 @@ export default function Shop() {
       `}</style>
 
       <div className={`sw-root ${darkMode ? "dark" : ""}`}>
+        {/* Hinweis vor dem Shop-Start – wird über SHOP_OPEN in shopData.js gesteuert */}
+        {!SHOP_OPEN && (
+          <div className="sw-launch-bar">
+            <span className="sw-launch-text">
+              <Sparkles size={14} />
+              Der Shop startet bald – Bestellungen sind noch nicht möglich.
+            </span>
+            <a
+              href="https://www.instagram.com/suchy_prints"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sw-launch-link"
+            >
+              <InstagramIcon size={13} /> Folge uns für den Start
+            </a>
+          </div>
+        )}
+
         {/* Header */}
         <header style={{ position: "sticky", top: 0, zIndex: 30, background: "var(--surface)", borderBottom: "1px solid var(--line)" }}>
           <div style={{ maxWidth: 1080, margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>

@@ -1,5 +1,9 @@
 import { Layers, Home, Cog, Gamepad2, Wand2 } from "lucide-react";
 
+// Solange false, zeigt der Shop oben den Hinweis "Shop startet bald".
+// Zum offiziellen Start einfach auf true setzen.
+export const SHOP_OPEN = false;
+
 export const CATEGORIES = [
   { id: "alle", label: "Alle", icon: Layers },
   { id: "deko", label: "Deko", icon: Home },
