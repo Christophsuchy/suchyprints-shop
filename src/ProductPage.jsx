@@ -9,6 +9,15 @@ export default function ProductPage() {
   const { id } = useParams();
   const product = PRODUCTS.find((p) => p.id === id);
   const [added, setAdded] = useState(false);
+  const [sel, setSel] = useState(0);
+  // Medien: zuerst Endlos-Video (falls vorhanden), dann Fotos
+  const media = product
+    ? [
+        ...(product.video ? [{ type: "video", ...product.video }] : []),
+        ...(product.images || []).map((src) => ({ type: "image", src })),
+      ]
+    : [];
+  const cur = media[sel] || media[0];
   const related = product
     ? PRODUCTS.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 3)
     : [];
@@ -54,17 +63,62 @@ export default function ProductPage() {
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40 }}>
-          <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", height: 340, background: product.hue, opacity: product.inStock || product.comingSoon ? 1 : 0.5 }}>
-            <div className="pp-layer-bg" style={{ position: "absolute", inset: 0 }} />
-            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <ProductIllustration id={product.id} size={220} color="rgba(255,255,255,0.92)" />
+          {media.length ? (
+            <div>
+              <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", aspectRatio: "1 / 1", background: "#F7F4EF", border: "1px solid #E4DFD6" }}>
+                {cur.type === "video" ? (
+                  <video
+                    key={cur.mp4}
+                    autoPlay muted loop playsInline
+                    poster={cur.poster}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  >
+                    {cur.webm && <source src={cur.webm} type="video/webm" />}
+                    <source src={cur.mp4} type="video/mp4" />
+                  </video>
+                ) : (
+                  <img src={cur.src} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+                )}
+                {!product.inStock && (
+                  <span style={{ position: "absolute", top: 16, left: 16, background: "#7A7A82", color: "#fff", fontSize: 12, fontWeight: 700, padding: "6px 12px", borderRadius: 999 }}>
+                    {product.comingSoon ? "Bald verfügbar" : "Ausverkauft"}
+                  </span>
+                )}
+              </div>
+              {media.length > 1 && (
+                <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                  {media.map((m, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setSel(i)}
+                      aria-label={m.type === "video" ? "Video ansehen" : `Bild ${i + 1} ansehen`}
+                      style={{
+                        width: 64, height: 64, padding: 0, borderRadius: 10, overflow: "hidden", cursor: "pointer", position: "relative",
+                        background: "#F7F4EF", border: i === sel ? "2px solid #A85A32" : "1px solid #E4DFD6",
+                      }}
+                    >
+                      <img src={m.type === "video" ? m.poster : m.src} alt="" style={{ width: "100%", height: "100%", objectFit: m.type === "video" ? "cover" : "contain", display: "block" }} />
+                      {m.type === "video" && (
+                        <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.25)", color: "#fff", fontSize: 18 }}>▶</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-            {!product.inStock && (
-              <span style={{ position: "absolute", top: 16, left: 16, background: "#7A7A82", color: "#fff", fontSize: 12, fontWeight: 700, padding: "6px 12px", borderRadius: 999 }}>
-                {product.comingSoon ? "Bald verfügbar" : "Ausverkauft"}
-              </span>
-            )}
-          </div>
+          ) : (
+            <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", height: 340, background: product.hue, opacity: product.inStock || product.comingSoon ? 1 : 0.5 }}>
+              <div className="pp-layer-bg" style={{ position: "absolute", inset: 0 }} />
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <ProductIllustration id={product.id} size={220} color="rgba(255,255,255,0.92)" />
+              </div>
+              {!product.inStock && (
+                <span style={{ position: "absolute", top: 16, left: 16, background: "#7A7A82", color: "#fff", fontSize: 12, fontWeight: 700, padding: "6px 12px", borderRadius: 999 }}>
+                  {product.comingSoon ? "Bald verfügbar" : "Ausverkauft"}
+                </span>
+              )}
+            </div>
+          )}
 
           <div>
             <span style={{ fontSize: 12.5, fontWeight: 600, color: MATERIALS[product.material].color, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.03em" }}>
@@ -125,10 +179,14 @@ export default function ProductPage() {
               {related.map((r) => (
                 <Link key={r.id} to={`/produkt/${r.id}`} style={{ textDecoration: "none", color: "inherit" }}>
                   <div style={{ background: "#fff", border: "1px solid #E4DFD6", borderRadius: 12, overflow: "hidden" }}>
-                    <div style={{ height: 90, background: r.hue, opacity: r.inStock || r.comingSoon ? 1 : 0.5, position: "relative" }}>
-                      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <ProductIllustration id={r.id} size={54} color="rgba(255,255,255,0.9)" />
-                      </div>
+                    <div style={{ height: 90, background: r.images?.length ? "#F7F4EF" : r.hue, opacity: r.inStock || r.comingSoon ? 1 : 0.5, position: "relative" }}>
+                      {r.images?.length ? (
+                        <img src={r.images[0]} alt={r.name} loading="lazy" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }} />
+                      ) : (
+                        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <ProductIllustration id={r.id} size={54} color="rgba(255,255,255,0.9)" />
+                        </div>
+                      )}
                     </div>
                     <div style={{ padding: 12 }}>
                       <p style={{ fontSize: 13, fontWeight: 600, margin: "0 0 4px", lineHeight: 1.3 }}>{r.name}</p>

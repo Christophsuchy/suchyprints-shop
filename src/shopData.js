@@ -20,6 +20,7 @@ export const MATERIALS = {
 
 // Startsortiment – einfach weitere Objekte in dieses Array einfügen, es gibt kein festes Limit.
 // inStock: false blendet den Kaufen-Button aus und zeigt "Ausverkauft".
+// images: [...] zeigt echte Fotos statt Illustration, video: { mp4, webm, poster } eine Endlos-Animation auf der Produktseite.
 // comingSoon: true (zusammen mit inStock: false) zeigt stattdessen "Bald verfügbar" – für Produkte in Entwicklung.
 export const PRODUCTS = [
   { id: "p1", name: "Geometrische Vase, klein", category: "deko", material: "PLA", price: 14.9, originalPrice: 18.5, hue: "#FF6A13", tag: "aktion", inStock: false, comingSoon: true, description: "Schlichte, facettierte Vase im geometrischen Stil – ein dezenter Blickfang für Trockenblumen oder als Deko-Objekt allein. Wasserdicht bei Verwendung von PLA nur bedingt, daher am besten für trockene Deko." },
@@ -38,7 +39,10 @@ export const PRODUCTS = [
   { id: "p19", name: "Napf-Untersteller mit Tiernamen", category: "individuell", material: "PETG", price: 19.0, hue: "#D4537E", tag: "neu", inStock: false, comingSoon: true, description: "Untersteller für Edelstahlnäpfe, mit dem Namen deines Tieres vorne eingelassen. Bitte bei der Bestellung den gewünschten Namen sowie den Durchmesser deines Napfs angeben." },
   { id: "p20", name: "Namensschild, personalisiert", category: "individuell", material: "PLA", price: 9.0, hue: "#FF6A13", inStock: false, comingSoon: true, description: "Personalisiertes Namensschild – für Tür, Regal oder als Geschenk. Wunschname bitte bei der Bestellung angeben, optional mit LED-Hinterleuchtung gegen Aufpreis (einfach anfragen)." },
   { id: "p22", name: "Infinity-Würfel (Fidget)", category: "spielzeug", material: "PLA", price: 12.0, hue: "#FF6A13", tag: "neu", inStock: false, comingSoon: true, description: "Acht Würfel, verbunden durch mitgedruckte Gelenke – lässt sich endlos in sich selbst falten. Der perfekte Fidget für den Schreibtisch. Enthält Kleinteile, nicht für Kinder unter 3 Jahren geeignet." },
-  { id: "p23", name: "Zahnrad-Fidget", category: "spielzeug", material: "PETG", price: 9.5, hue: "#2F6FED", inStock: false, comingSoon: true, description: "Ineinandergreifende Zahnräder auf einer handlichen Platte – dreh eins, und alle drehen mit. In einem Stück gedruckt, ganz ohne Zusammenbau. Enthält Kleinteile, nicht für Kinder unter 3 Jahren geeignet." },
+  { id: "p23", name: "Zahnrad-Fidget", category: "spielzeug", material: "PLA", price: 9.5, hue: "#2F6FED", inStock: false, comingSoon: true,
+    images: ["/products/zahnrad-fidget-1.webp", "/products/zahnrad-fidget-2.webp", "/products/zahnrad-fidget-3.webp"],
+    video: { mp4: "/products/zahnrad-fidget-spin.mp4", webm: "/products/zahnrad-fidget-spin.webm", poster: "/products/zahnrad-fidget-spin-poster.webp" },
+    description: "Zahnräder zum Drehen für zwischendurch: Ein gezahnter Ring, ein Rad in der Mitte und vier kleine Zahnräder greifen ineinander – dreh die Mitte und alles läuft mit. Herrlich beruhigend und in einem Stück gedruckt, ganz ohne Zusammenbau. Ø 60 mm, 10 mm hoch. Enthält Kleinteile, nicht für Kinder unter 3 Jahren geeignet." },
   { id: "p24", name: "Fidget-Spinner", category: "spielzeug", material: "PLA", price: 11.0, hue: "#D4537E", inStock: false, comingSoon: true, description: "Klassischer Fidget-Spinner in eigenem SuchyPrints-Design, mit Kugellager für lange, ruhige Drehungen. Enthält Kleinteile, nicht für Kinder unter 3 Jahren geeignet." },
   { id: "p21", name: "Ersatzteil nach Foto oder Maß", category: "individuell", material: "PLA", price: 12.0, hue: "#2F6FED", inStock: false, comingSoon: true, description: "Ein Teil kaputt und nicht mehr erhältlich? Schick uns ein Foto und die Maße – wir modellieren und drucken dir einen passenden Ersatz. Preis ist ein Richtwert und hängt vom Aufwand ab, wir melden uns vorab mit einem konkreten Angebot." },
 ];

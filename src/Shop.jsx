@@ -512,6 +512,7 @@ export default function Shop() {
           grid-column: span 2;
         }
         .sw-card.featured .sw-swatch { height: 200px; }
+        .sw-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
         .sw-swatch {
           height: 108px;
           position: relative;
@@ -806,11 +807,17 @@ export default function Shop() {
                   <div key={p.id} className={`sw-card ${isFeatured ? "featured" : ""}`}>
                     <Link to={`/produkt/${p.id}`} style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", flex: 1 }}>
                       <div className="sw-swatch">
-                        <div className="sw-swatch-fill" style={{ background: p.hue, opacity: p.inStock || p.comingSoon ? 1 : 0.45 }}>
-                          <div className="sw-layer-bg" style={{ position: "absolute", inset: 0, opacity: 0.18 }} />
-                          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <ProductIllustration id={p.id} size={isFeatured ? 130 : 84} color="rgba(255,255,255,0.92)" />
-                          </div>
+                        <div className="sw-swatch-fill" style={{ background: p.images?.length ? "#F7F4EF" : p.hue, opacity: p.inStock || p.comingSoon ? 1 : 0.45 }}>
+                          {p.images?.length ? (
+                            <img src={p.images[0]} alt={p.name} loading="lazy" className="sw-photo" />
+                          ) : (
+                            <>
+                              <div className="sw-layer-bg" style={{ position: "absolute", inset: 0, opacity: 0.18 }} />
+                              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <ProductIllustration id={p.id} size={isFeatured ? 130 : 84} color="rgba(255,255,255,0.92)" />
+                              </div>
+                            </>
+                          )}
                         </div>
                         {p.tag && p.inStock && (
                           <span
