@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { supabase } from "./supabaseClient";
 import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Loader2, Trash2, Sun, Moon, Truck, RotateCcw, ShieldCheck, ChevronDown, Tag, PenTool, Sparkles, Package, Mail, Star } from "lucide-react";
-import { CATEGORIES, MATERIALS, PRODUCTS, TAG_LABELS, DISCOUNT_CODES, FAQS, SHOP_OPEN, formatPrice } from "./shopData";
+import { CATEGORIES, MATERIALS, PRODUCTS, TAG_LABELS, DISCOUNT_CODES, FAQS, SHOP_OPEN, formatPrice, parseCartKey, colorLabel } from "./shopData";
 import ProductIllustration from "./ProductIllustration";
 import { EMAILJS_SERVICE_ID, EMAILJS_PUBLIC_KEY, SHOP_OWNER_EMAIL, EMAILJS_ORDER_TEMPLATE_ID } from "./emailConfig";
 
@@ -178,10 +178,19 @@ export default function Shop() {
   const cartItems = useMemo(() => {
     return Object.entries(cart)
       .filter(([, qty]) => qty > 0)
-      .map(([id, qty]) => ({ product: PRODUCTS.find((p) => p.id === id), qty }))
-      // Nicht mehr vorhandene oder nicht bestellbare Produkte aus alten Warenkörben ignorieren
-      .filter(({ product }) => product && product.inStock)
-      .map(({ product, qty }) => ({ ...product, qty }));
+      .map(([key, qty]) => {
+        const { id, colors } = parseCartKey(key);
+        return { key, colors, product: PRODUCTS.find((p) => p.id === id), qty };
+      })
+      // Nicht mehr vorhandene oder nicht bestellbare Produkte aus alten Warenkörben ignorieren,
+      // ebenso Farbprodukte ohne (vollständige) Farbwahl
+      .filter(({ product, colors }) => product && product.inStock && (!product.colorCount || colors.length === product.colorCount))
+      .map(({ key, colors, product, qty }) => ({
+        ...product,
+        key,
+        qty,
+        colorText: colors.length ? colors.map((c) => colorLabel(product, c)).join(" + ") : "",
+      }));
   }, [cart]);
 
   const cartCount = cartItems.reduce((s, i) => s + i.qty, 0);
@@ -227,9 +236,9 @@ export default function Shop() {
     setSendError("");
     setSending(true);
     const orderDetails = cartItems
-      .map((i) => `${i.qty}x ${i.name} (${formatPrice(i.price)} pro Stück) = ${formatPrice(i.qty * i.price)}`)
+      .map((i) => `${i.qty}x ${i.name}${i.colorText ? ` – Farbe: ${i.colorText}` : ""} (${formatPrice(i.price)} pro Stück) = ${formatPrice(i.qty * i.price)}`)
       .join("\n");
-    const itemsForDb = cartItems.map((i) => ({ name: i.name, qty: i.qty, price: i.price }));
+    const itemsForDb = cartItems.map((i) => ({ name: i.colorText ? `${i.name} (${i.colorText})` : i.name, qty: i.qty, price: i.price }));
     try {
       const { data: insertedOrder, error: dbError } = await supabase
         .from("orders")
@@ -857,7 +866,11 @@ export default function Shop() {
                           {formatPrice(p.price)}
                         </span>
                       </span>
-                      {p.inStock ? (
+                      {p.inStock && p.colors ? (
+                        <Link to={`/produkt/${p.id}`} className="sw-add-btn" style={{ textDecoration: "none" }}>
+                          Farbe wählen
+                        </Link>
+                      ) : p.inStock ? (
                         <button className="sw-add-btn" onClick={() => addToCart(p.id)}>
                           <Plus size={13} /> Warenkorb
                         </button>
@@ -1097,22 +1110,29 @@ export default function Shop() {
             </div>
           ) : (
             cartItems.map((item) => (
-              <div key={item.id} style={{ display: "flex", gap: 12, padding: "14px 0", borderBottom: "1px solid var(--line)" }}>
-                <div style={{ width: 52, height: 52, borderRadius: 12, background: `linear-gradient(155deg, ${item.hue}, ${item.hue}cc)`, flexShrink: 0, boxShadow: "0 4px 10px rgba(0,0,0,0.12)", position: "relative" }}>
-                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <ProductIllustration id={item.id} size={30} color="rgba(255,255,255,0.9)" />
-                  </div>
+              <div key={item.key} style={{ display: "flex", gap: 12, padding: "14px 0", borderBottom: "1px solid var(--line)" }}>
+                <div style={{ width: 52, height: 52, borderRadius: 12, background: item.images?.length ? "#F7F4EF" : `linear-gradient(155deg, ${item.hue}, ${item.hue}cc)`, flexShrink: 0, boxShadow: "0 4px 10px rgba(0,0,0,0.12)", position: "relative", overflow: "hidden" }}>
+                  {item.images?.length ? (
+                    <img src={item.images[0]} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }} />
+                  ) : (
+                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <ProductIllustration id={item.id} size={30} color="rgba(255,255,255,0.9)" />
+                    </div>
+                  )}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: 13.5, fontWeight: 500, margin: 0, lineHeight: 1.35 }}>{item.name}</p>
+                  {item.colorText && (
+                    <p style={{ fontSize: 12, color: "var(--muted)", margin: "2px 0 0" }}>Farbe: {item.colorText}</p>
+                  )}
                   <p style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--muted)", margin: "4px 0 8px" }}>{formatPrice(item.price)}</p>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--line)", borderRadius: 999, overflow: "hidden" }}>
-                      <button onClick={() => changeQty(item.id, -1)} aria-label="Menge verringern" style={{ border: "none", background: "none", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--ink)" }}><Minus size={12} /></button>
+                      <button onClick={() => changeQty(item.key, -1)} aria-label="Menge verringern" style={{ border: "none", background: "none", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--ink)" }}><Minus size={12} /></button>
                       <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, minWidth: 18, textAlign: "center" }}>{item.qty}</span>
-                      <button onClick={() => changeQty(item.id, 1)} aria-label="Menge erhöhen" style={{ border: "none", background: "none", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--ink)" }}><Plus size={12} /></button>
+                      <button onClick={() => changeQty(item.key, 1)} aria-label="Menge erhöhen" style={{ border: "none", background: "none", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--ink)" }}><Plus size={12} /></button>
                     </div>
-                    <button onClick={() => removeItem(item.id)} aria-label="Entfernen" style={{ marginLeft: "auto", border: "none", background: "none", color: "var(--muted)", cursor: "pointer", display: "flex", alignItems: "center" }}>
+                    <button onClick={() => removeItem(item.key)} aria-label="Entfernen" style={{ marginLeft: "auto", border: "none", background: "none", color: "var(--muted)", cursor: "pointer", display: "flex", alignItems: "center" }}>
                       <Trash2 size={15} />
                     </button>
                   </div>

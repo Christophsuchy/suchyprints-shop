@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Plus, Check } from "lucide-react";
-import { PRODUCTS, MATERIALS, formatPrice } from "./shopData";
+import { PRODUCTS, MATERIALS, formatPrice, cartKey } from "./shopData";
 import { Logo } from "./Shop";
 import ProductIllustration from "./ProductIllustration";
 
@@ -10,6 +10,17 @@ export default function ProductPage() {
   const product = PRODUCTS.find((p) => p.id === id);
   const [added, setAdded] = useState(false);
   const [sel, setSel] = useState(0);
+  const colorCount = product?.colorCount || 0;
+  const [picks, setPicks] = useState([]);
+  // Beim Wechsel zu einem anderen Produkt Auswahl zurücksetzen
+  useEffect(() => { setPicks([]); setSel(0); setAdded(false); }, [id]);
+  const pickedAll = !colorCount || (picks.length === colorCount && picks.every(Boolean));
+  const setPick = (slot, colorId) =>
+    setPicks((p) => {
+      const n = [...p];
+      n[slot] = colorId;
+      return n;
+    });
   // Medien: zuerst Endlos-Video (falls vorhanden), dann Fotos
   const media = product
     ? [
@@ -26,7 +37,9 @@ export default function ProductPage() {
     try {
       const saved = localStorage.getItem("sw-cart");
       const cart = saved ? JSON.parse(saved) : {};
-      cart[product.id] = (cart[product.id] || 0) + 1;
+      if (!pickedAll) return;
+      const key = cartKey(product.id, colorCount ? picks.slice(0, colorCount) : []);
+      cart[key] = (cart[key] || 0) + 1;
       localStorage.setItem("sw-cart", JSON.stringify(cart));
       setAdded(true);
     } catch (e) {
@@ -135,6 +148,43 @@ export default function ProductPage() {
               {product.description}
             </p>
 
+            {product.colors && (
+              <div style={{ marginBottom: 22 }}>
+                {Array.from({ length: colorCount }).map((_, slot) => {
+                  const chosen = product.colors.find((c) => c.id === picks[slot]);
+                  return (
+                    <div key={slot} style={{ marginBottom: 14 }}>
+                      <p style={{ fontSize: 13, fontWeight: 600, margin: "0 0 8px" }}>
+                        {colorCount > 1 ? `Farbe ${slot + 1}` : "Farbe"}
+                        <span style={{ fontWeight: 400, color: "#7A7A82" }}>{chosen ? ` – ${chosen.label}` : " – bitte wählen"}</span>
+                      </p>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        {product.colors.map((c) => {
+                          const active = picks[slot] === c.id;
+                          return (
+                            <button
+                              key={c.id}
+                              type="button"
+                              title={c.label}
+                              aria-label={c.label}
+                              aria-pressed={active}
+                              onClick={() => { setPick(slot, c.id); setAdded(false); }}
+                              style={{
+                                width: 32, height: 32, borderRadius: "50%", cursor: "pointer", padding: 0,
+                                background: c.css, border: "1px solid rgba(0,0,0,0.15)",
+                                boxShadow: active ? "0 0 0 2px #F7F4EF, 0 0 0 4px #A85A32" : "none",
+                                transition: "box-shadow 0.15s ease",
+                              }}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 24 }}>
               {product.originalPrice && (
                 <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 15, color: "#7A7A82", textDecoration: "line-through" }}>
@@ -155,9 +205,12 @@ export default function ProductPage() {
               ) : (
                 <button
                   onClick={addToCart}
+                  disabled={!pickedAll}
+                  title={pickedAll ? "" : "Bitte zuerst eine Farbe wählen"}
                   style={{
+                    opacity: pickedAll ? 1 : 0.5,
                     display: "inline-flex", alignItems: "center", gap: 8, background: "linear-gradient(135deg, #C97A4E, #82431F)",
-                    color: "#fff", border: "none", borderRadius: 999, padding: "13px 26px", fontSize: 14.5, fontWeight: 600, cursor: "pointer",
+                    color: "#fff", border: "none", borderRadius: 999, padding: "13px 26px", fontSize: 14.5, fontWeight: 600, cursor: pickedAll ? "pointer" : "not-allowed",
                     boxShadow: "0 8px 18px rgba(130, 67, 31, 0.32)",
                   }}
                 >
