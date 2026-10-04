@@ -434,8 +434,11 @@ export default function Shop() {
           text-underline-offset: 3px;
         }
         .sw-launch-link:hover { opacity: 0.85; }
+        .sw-launch-short { display: none; }
         @media (max-width: 600px) {
-          .sw-launch-bar { font-size: 12px; padding: 8px 12px; }
+          .sw-launch-bar { font-size: 12px; padding: 8px 12px; gap: 4px 14px; }
+          .sw-launch-icon, .sw-launch-long { display: none; }
+          .sw-launch-short { display: inline; }
         }
         .sw-cat-bar {
           display: flex;
@@ -620,8 +623,9 @@ export default function Shop() {
         {!SHOP_OPEN && (
           <div className="sw-launch-bar">
             <span className="sw-launch-text">
-              <Sparkles size={14} />
-              Der Shop startet bald – Bestellungen sind noch nicht möglich.
+              <Sparkles size={14} className="sw-launch-icon" />
+              <span className="sw-launch-long">Der Shop startet bald – Bestellungen sind noch nicht möglich.</span>
+              <span className="sw-launch-short">Shop startet bald – noch keine Bestellungen möglich.</span>
             </span>
             <a
               href="https://www.instagram.com/suchy_prints"
