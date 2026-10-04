@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useId } from "react";
 import { Link } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { supabase } from "./supabaseClient";
-import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Loader2, Trash2, Sun, Moon, Truck, RotateCcw, ShieldCheck, ChevronDown, Tag, PenTool, Sparkles, Package, Mail, Quote, Star } from "lucide-react";
+import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Loader2, Trash2, Sun, Moon, Truck, RotateCcw, ShieldCheck, ChevronDown, Tag, PenTool, Sparkles, Package, Mail, Star } from "lucide-react";
 import { CATEGORIES, MATERIALS, PRODUCTS, TAG_LABELS, DISCOUNT_CODES, FAQS, formatPrice } from "./shopData";
 import ProductIllustration from "./ProductIllustration";
 import { EMAILJS_SERVICE_ID, EMAILJS_PUBLIC_KEY, SHOP_OWNER_EMAIL, EMAILJS_ORDER_TEMPLATE_ID } from "./emailConfig";
@@ -790,7 +790,8 @@ export default function Shop() {
           </div>
         </section>
 
-        {/* Kundenstimmen – PLATZHALTER: bitte durch echte Bewertungen ersetzen, sobald vorhanden */}
+        {/* Kundenstimmen – wird automatisch angezeigt, sobald echte Bewertungen vorhanden sind */}
+        {reviews.length > 0 && (
         <section style={{ maxWidth: 1080, margin: "0 auto", padding: "0 24px 56px" }}>
           <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 24, marginBottom: 24, textAlign: "center" }}>
             Was Kund*innen sagen
@@ -812,17 +813,10 @@ export default function Shop() {
                     <p style={{ fontSize: 12.5, fontWeight: 600, margin: 0 }}>– {r.customer_name}</p>
                   </div>
                 ))
-              : [1, 2, 3].map((i) => (
-                  <div key={i} style={{ background: "var(--surface)", border: "1px dashed var(--line)", borderRadius: 14, padding: 20 }}>
-                    <Quote size={18} color="var(--accent)" style={{ marginBottom: 10 }} />
-                    <p style={{ color: "var(--muted)", fontSize: 13.5, lineHeight: 1.6, margin: "0 0 12px", fontStyle: "italic" }}>
-                      Platzhalter für eine echte Kundenstimme – hier später eine reale Bewertung einfügen.
-                    </p>
-                    <p style={{ fontSize: 12.5, fontWeight: 600, margin: 0 }}>– Noch offen</p>
-                  </div>
-                ))}
+              : null}
           </div>
         </section>
+        )}
 
         {/* FAQ */}
         <section style={{ maxWidth: 780, margin: "0 auto", padding: "0 24px 56px" }}>
