@@ -178,7 +178,10 @@ export default function Shop() {
   const cartItems = useMemo(() => {
     return Object.entries(cart)
       .filter(([, qty]) => qty > 0)
-      .map(([id, qty]) => ({ ...PRODUCTS.find((p) => p.id === id), qty }));
+      .map(([id, qty]) => ({ product: PRODUCTS.find((p) => p.id === id), qty }))
+      // Nicht mehr vorhandene oder nicht bestellbare Produkte aus alten Warenkörben ignorieren
+      .filter(({ product }) => product && product.inStock)
+      .map(({ product, qty }) => ({ ...product, qty }));
   }, [cart]);
 
   const cartCount = cartItems.reduce((s, i) => s + i.qty, 0);
@@ -457,6 +460,7 @@ export default function Shop() {
           color: var(--muted);
           pointer-events: none;
         }
+        .sw-app.dark .sw-select select { color-scheme: dark; }
         .sw-cat-count { color: var(--muted); font-size: 13px; white-space: nowrap; }
         @media (max-width: 600px) {
           .sw-select { flex: 1; min-width: 0; }
@@ -668,7 +672,7 @@ export default function Shop() {
               <span className="sw-mode-icon"><Package size={20} /></span>
               <span className="sw-mode-text">
                 <span className="sw-mode-title">Fertige Produkte</span>
-                <span className="sw-mode-sub">Sofort bestellbar · {countFertig} Artikel</span>
+                <span className="sw-mode-sub">Aus unserem Sortiment · {countFertig} Artikel</span>
               </span>
             </button>
             <button
@@ -754,7 +758,7 @@ export default function Shop() {
                   <div key={p.id} className={`sw-card ${isFeatured ? "featured" : ""}`}>
                     <Link to={`/produkt/${p.id}`} style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", flex: 1 }}>
                       <div className="sw-swatch">
-                        <div className="sw-swatch-fill" style={{ background: p.hue, opacity: p.inStock ? 1 : 0.45 }}>
+                        <div className="sw-swatch-fill" style={{ background: p.hue, opacity: p.inStock || p.comingSoon ? 1 : 0.45 }}>
                           <div className="sw-layer-bg" style={{ position: "absolute", inset: 0, opacity: 0.18 }} />
                           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <ProductIllustration id={p.id} size={isFeatured ? 130 : 84} color="rgba(255,255,255,0.92)" />
@@ -774,7 +778,7 @@ export default function Shop() {
                         )}
                         {!p.inStock && (
                           <span className="sw-tag-ribbon" style={{ background: "var(--muted)", color: "#fff" }}>
-                            Ausverkauft
+                            {p.comingSoon ? "Bald verfügbar" : "Ausverkauft"}
                           </span>
                         )}
                       </div>
@@ -803,7 +807,7 @@ export default function Shop() {
                           <Plus size={13} /> Warenkorb
                         </button>
                       ) : (
-                        <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 500 }}>Ausverkauft</span>
+                        <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 500 }}>{p.comingSoon ? "Bald verfügbar" : "Ausverkauft"}</span>
                       )}
                     </div>
                   </div>

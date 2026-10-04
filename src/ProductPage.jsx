@@ -54,14 +54,14 @@ export default function ProductPage() {
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40 }}>
-          <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", height: 340, background: product.hue, opacity: product.inStock ? 1 : 0.5 }}>
+          <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", height: 340, background: product.hue, opacity: product.inStock || product.comingSoon ? 1 : 0.5 }}>
             <div className="pp-layer-bg" style={{ position: "absolute", inset: 0 }} />
             <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <ProductIllustration id={product.id} size={220} color="rgba(255,255,255,0.92)" />
             </div>
             {!product.inStock && (
               <span style={{ position: "absolute", top: 16, left: 16, background: "#7A7A82", color: "#fff", fontSize: 12, fontWeight: 700, padding: "6px 12px", borderRadius: 999 }}>
-                Ausverkauft
+                {product.comingSoon ? "Bald verfügbar" : "Ausverkauft"}
               </span>
             )}
           </div>
@@ -107,7 +107,11 @@ export default function ProductPage() {
                 </button>
               )
             ) : (
-              <p style={{ color: "#7A7A82", fontSize: 14 }}>Aktuell leider ausverkauft – schau bald wieder vorbei.</p>
+              <p style={{ color: "#7A7A82", fontSize: 14 }}>
+                {product.comingSoon
+                  ? "Wir arbeiten gerade daran – bald kannst du es hier bestellen."
+                  : "Aktuell leider ausverkauft – schau bald wieder vorbei."}
+              </p>
             )}
           </div>
         </div>
@@ -121,7 +125,7 @@ export default function ProductPage() {
               {related.map((r) => (
                 <Link key={r.id} to={`/produkt/${r.id}`} style={{ textDecoration: "none", color: "inherit" }}>
                   <div style={{ background: "#fff", border: "1px solid #E4DFD6", borderRadius: 12, overflow: "hidden" }}>
-                    <div style={{ height: 90, background: r.hue, opacity: r.inStock ? 1 : 0.5, position: "relative" }}>
+                    <div style={{ height: 90, background: r.hue, opacity: r.inStock || r.comingSoon ? 1 : 0.5, position: "relative" }}>
                       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <ProductIllustration id={r.id} size={54} color="rgba(255,255,255,0.9)" />
                       </div>

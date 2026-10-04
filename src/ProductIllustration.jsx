@@ -150,6 +150,35 @@ const PATHS = {
       <line x1="30" y1="54" x2="55" y2="54" />
     </>
   ),
+  p22: ( // Infinity-Würfel
+    <>
+      <rect x="22" y="30" width="22" height="22" rx="3" />
+      <rect x="44" y="30" width="22" height="22" rx="3" />
+      <rect x="22" y="52" width="22" height="22" rx="3" />
+      <rect x="44" y="52" width="22" height="22" rx="3" />
+      <path d="M66 36 Q78 41 66 46" />
+      <path d="M28 74 Q33 84 38 74" />
+    </>
+  ),
+  p23: ( // Zahnrad-Fidget
+    <>
+      <circle cx="38" cy="45" r="13" />
+      <circle cx="38" cy="45" r="3" fill="currentColor" />
+      <path d="M38 27 v5 M38 58 v5 M20 45 h5 M51 45 h5 M25 32 l4 4 M47 54 l4 4 M25 58 l4 -4 M47 36 l4 -4" />
+      <circle cx="64" cy="64" r="10" />
+      <circle cx="64" cy="64" r="2.5" fill="currentColor" />
+      <path d="M64 50 v4 M64 74 v4 M50 64 h4 M74 64 h4" />
+    </>
+  ),
+  p24: ( // Fidget-Spinner
+    <>
+      <circle cx="50" cy="50" r="9" />
+      <circle cx="50" cy="26" r="11" />
+      <circle cx="29" cy="62" r="11" />
+      <circle cx="71" cy="62" r="11" />
+      <path d="M43 30 L45 42 M55 42 L57 30 M38 57 L42 53 M58 53 L62 57" />
+    </>
+  ),
   p21: ( // Ersatzteil nach Foto/Maß
     <>
       <path d="M42 25 a12 12 0 1 0 0.1 0 Z" />
