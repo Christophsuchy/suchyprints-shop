@@ -72,6 +72,7 @@ export function Logo({ size = 44, withText = true, color = "#2B2E4A", accent = "
 
 export default function Shop() {
   const [cart, setCart] = useState({});
+  const [mode, setMode] = useState("fertig"); // "fertig" | "individuell"
   const [category, setCategory] = useState("alle");
   const [query, setQuery] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
@@ -160,11 +161,18 @@ export default function Shop() {
 
   const filtered = useMemo(() => {
     return PRODUCTS.filter((p) => {
-      const matchCat = category === "alle" || p.category === category;
       const matchQuery = p.name.toLowerCase().includes(query.toLowerCase());
-      return matchCat && matchQuery;
+      // Bei aktiver Suche werden beide Bereiche durchsucht
+      if (query) return matchQuery;
+      if (mode === "individuell") return p.category === "individuell";
+      const matchCat = category === "alle" || p.category === category;
+      return p.category !== "individuell" && matchCat;
     });
-  }, [category, query]);
+  }, [mode, category, query]);
+
+  const countFertig = PRODUCTS.filter((p) => p.category !== "individuell").length;
+  const countIndividuell = PRODUCTS.filter((p) => p.category === "individuell").length;
+  const SUB_CATEGORIES = CATEGORIES.filter((c) => c.id !== "individuell");
 
   const cartItems = useMemo(() => {
     return Object.entries(cart)
@@ -369,6 +377,56 @@ export default function Shop() {
           width: 40px;
           background: linear-gradient(to right, transparent, var(--bg));
           pointer-events: none;
+        }
+        .sw-mode-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+          margin-top: -36px;
+          position: relative;
+          z-index: 2;
+        }
+        .sw-mode-card {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          text-align: left;
+          padding: 18px 20px;
+          border-radius: 16px;
+          border: 2px solid var(--line);
+          background: var(--surface);
+          color: var(--ink);
+          cursor: pointer;
+          font: inherit;
+          box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+          transition: border-color .15s, transform .15s;
+        }
+        .sw-mode-card:hover { border-color: var(--accent-soft); transform: translateY(-1px); }
+        .sw-mode-card.active { border-color: var(--accent); }
+        .sw-mode-icon {
+          width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          background: var(--bg); color: var(--accent);
+        }
+        .sw-mode-card.active .sw-mode-icon {
+          background: linear-gradient(135deg, var(--accent-soft), var(--accent));
+          color: #fff;
+        }
+        .sw-mode-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+        .sw-mode-title { font-family: var(--font-display); font-weight: 700; font-size: 17px; }
+        .sw-mode-sub { color: var(--muted); font-size: 12.5px; line-height: 1.35; }
+        .sw-cat-wrap {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 18px;
+        }
+        @media (max-width: 600px) {
+          .sw-mode-grid { gap: 10px; margin-top: -28px; }
+          .sw-mode-card { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px; }
+          .sw-mode-icon { width: 38px; height: 38px; }
+          .sw-mode-title { font-size: 15px; }
+          .sw-mode-sub { font-size: 11.5px; }
         }
         .sw-cat-btn {
           border: 1px solid var(--line);
@@ -612,14 +670,37 @@ export default function Shop() {
               Zu den Produkten
             </a>
           </div>
-          <div style={{ textAlign: "center", paddingBottom: 18, color: "rgba(255,255,255,0.6)" }}>▾</div>
         </section>
 
-        {/* Kategorien */}
+        {/* Bereichsauswahl: Fertige Produkte / Individuell */}
         <section id="produkte" style={{ maxWidth: 1080, margin: "0 auto", padding: "0 24px 8px", scrollMarginTop: 80 }}>
-          <div style={{ position: "relative" }}>
-            <div className="sw-cat-scroll" style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
-              {CATEGORIES.map((c) => {
+          <div className="sw-mode-grid">
+            <button
+              className={`sw-mode-card ${mode === "fertig" && !query ? "active" : ""}`}
+              onClick={() => { setMode("fertig"); setQuery(""); }}
+            >
+              <span className="sw-mode-icon"><Package size={20} /></span>
+              <span className="sw-mode-text">
+                <span className="sw-mode-title">Fertige Produkte</span>
+                <span className="sw-mode-sub">Sofort bestellbar · {countFertig} Artikel</span>
+              </span>
+            </button>
+            <button
+              className={`sw-mode-card ${mode === "individuell" && !query ? "active" : ""}`}
+              onClick={() => { setMode("individuell"); setQuery(""); }}
+            >
+              <span className="sw-mode-icon"><Wand2 size={20} /></span>
+              <span className="sw-mode-text">
+                <span className="sw-mode-title">Individuell</span>
+                <span className="sw-mode-sub">Mit Namen, nach Maß oder dein Design · {countIndividuell} Artikel</span>
+              </span>
+            </button>
+          </div>
+
+          {/* Unterkategorien nur bei fertigen Produkten */}
+          {mode === "fertig" && !query && (
+            <div className="sw-cat-wrap">
+              {SUB_CATEGORIES.map((c) => {
                 const Icon = c.icon;
                 return (
                   <button
@@ -631,14 +712,19 @@ export default function Shop() {
                     {c.label}
                   </button>
                 );
-            })}
+              })}
             </div>
-            <div className="sw-cat-fade" />
-          </div>
+          )}
+
+          {query && (
+            <p style={{ color: "var(--muted)", fontSize: 13.5, margin: "16px 0 0" }}>
+              Suchergebnisse für „{query}“ in allen Bereichen
+            </p>
+          )}
         </section>
 
         {/* Individuell-Hinweis */}
-        {category === "individuell" && (
+        {mode === "individuell" && !query && (
           <section style={{ maxWidth: 1080, margin: "0 auto", padding: "16px 24px 0" }}>
             <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: "20px 22px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
               <div style={{ width: 44, height: 44, borderRadius: 10, background: "#FBEAF0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>

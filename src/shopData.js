@@ -3,7 +3,7 @@ import { Layers, Home, Cog, Gamepad2, Wand2 } from "lucide-react";
 export const CATEGORIES = [
   { id: "alle", label: "Alle", icon: Layers },
   { id: "deko", label: "Deko", icon: Home },
-  { id: "technik", label: "Technik & Ersatzteile", icon: Cog },
+  { id: "technik", label: "Technik", icon: Cog },
   { id: "spielzeug", label: "Spielzeug", icon: Gamepad2 },
   { id: "individuell", label: "Individuell", icon: Wand2 },
 ];
