@@ -26,7 +26,7 @@ export default function Datenschutz() {
 
         <h2 style={h2}>2. Welche Daten wir verarbeiten</h2>
         <p style={p}>
-          Wenn du über unseren Shop bestellst, verarbeiten wir die von dir angegebenen Daten (Name, E-Mail-Adresse, Bestellinhalt) zur Abwicklung deiner Bestellung. Diese Daten werden per E-Mail an uns übermittelt (über den Dienst EmailJS) und zusätzlich in einer Datenbank (Supabase, Hosting in der EU) gespeichert, damit wir Bestellungen verwalten können. Deine Bestellbestätigung erhältst du über den E-Mail-Dienst Brevo (Sendinblue SAS, Frankreich, Server in der EU). Die Lieferadresse übernehmen wir aus deiner PayPal-Zahlung.
+          Wenn du über unseren Shop bestellst, verarbeiten wir die von dir angegebenen Daten (Name, E-Mail-Adresse, Bestellinhalt) zur Abwicklung deiner Bestellung. Diese Daten werden per E-Mail an uns übermittelt (über den Dienst EmailJS) und zusätzlich in einer Datenbank (Supabase, Hosting in der EU) gespeichert, damit wir Bestellungen verwalten können. Deine Bestellbestätigung und die Versandbenachrichtigung (mit Sendungsnummer) erhältst du über den E-Mail-Dienst Brevo (Sendinblue SAS, Frankreich, Server in der EU). Die Lieferadresse übernehmen wir aus deiner PayPal-Zahlung.
         </p>
         <p style={p}>
           Der Inhalt deines Warenkorbs wird lokal in deinem Browser gespeichert (localStorage), damit er beim erneuten Besuch erhalten bleibt. Diese Daten verlassen dein Gerät nicht, bis du eine Bestellung abschickst.
@@ -34,12 +34,12 @@ export default function Datenschutz() {
 
         <h2 style={h2}>3. Kontaktformular und Anfragen</h2>
         <p style={p}>
-          Wenn du uns über das Kontaktformular oder eine individuelle Anfrage schreibst, verarbeiten wir deinen Namen, deine E-Mail-Adresse und deine Nachricht, um deine Anfrage zu beantworten (Art. 6 Abs. 1 lit. b DSGVO). Die Nachricht wird über den Dienst EmailJS an unser Postfach weitergeleitet. Wir speichern Anfragen nur so lange, wie es für die Bearbeitung und eventuelle Folgefragen nötig ist.
+          Wenn du uns über das Kontaktformular oder eine individuelle Anfrage schreibst, verarbeiten wir deinen Namen, deine E-Mail-Adresse, deine Nachricht und – bei Anfragen – die Angaben und Dateien (z. B. Fotos oder 3D-Modelle), die du mitschickst, um deine Anfrage zu beantworten (Art. 6 Abs. 1 lit. b DSGVO). Nachrichten über das Kontaktformular werden über den Dienst EmailJS weitergeleitet, Anfragen samt Dateien und deine Eingangsbestätigung über den E-Mail-Dienst Brevo. Wir speichern Anfragen nur so lange, wie es für die Bearbeitung und eventuelle Folgefragen nötig ist.
         </p>
 
         <h2 style={h2}>4. Bewertungen</h2>
         <p style={p}>
-          Nach einer Bestellung kannst du über einen persönlichen Link eine Bewertung abgeben. Wir speichern Sternebewertung, Text und – falls angegeben – den Namen, den du dafür wählst, gemeinsam mit einem Verweis auf die Bestellung (Art. 6 Abs. 1 lit. a DSGVO). Bewertungen werden erst nach unserer Prüfung im Shop angezeigt. Auf Wunsch löschen wir deine Bewertung jederzeit.
+          Nach einer Bestellung kannst du über einen persönlichen Link eine Bewertung abgeben. Wir speichern Sternebewertung, Text, optional ein Foto und – falls angegeben – den Namen, den du dafür wählst, gemeinsam mit einem Verweis auf die Bestellung (Art. 6 Abs. 1 lit. a DSGVO). Fotos werden bei Supabase (Server in der EU) gespeichert. Bewertungen werden erst nach unserer Prüfung im Shop angezeigt. Auf Wunsch löschen wir deine Bewertung jederzeit.
         </p>
 
         <h2 style={h2}>5. Zahlungsabwicklung</h2>
@@ -49,7 +49,7 @@ export default function Datenschutz() {
 
         <h2 style={h2}>6. Newsletter</h2>
         <p style={p}>
-          Wenn du dich für unseren Newsletter anmeldest, verarbeiten wir deine E-Mail-Adresse auf Grundlage deiner Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), um dich über den Shop-Start, neue Produkte und Aktionen zu informieren. Die Anmeldung erfolgt im Double-Opt-in-Verfahren: Du erhältst zuerst eine E-Mail mit einem Bestätigungslink, erst danach wirst du eingetragen. Dabei werden der Zeitpunkt der Anmeldung und der Bestätigung gespeichert, um die Einwilligung nachweisen zu können.
+          Wenn du dich für unseren Newsletter anmeldest, verarbeiten wir deine E-Mail-Adresse auf Grundlage deiner Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), um dich über den Shop-Start, neue Produkte und Aktionen zu informieren. Wenn du dich bei einem Produkt für „Benachrichtige mich“ einträgst, merken wir uns zusätzlich, für welches Produkt du dich interessierst, und sagen dir Bescheid, sobald es verfügbar ist. Die Anmeldung erfolgt im Double-Opt-in-Verfahren: Du erhältst zuerst eine E-Mail mit einem Bestätigungslink, erst danach wirst du eingetragen. Dabei werden der Zeitpunkt der Anmeldung und der Bestätigung gespeichert, um die Einwilligung nachweisen zu können.
         </p>
         <p style={p}>
           Für den Versand nutzen wir den Dienst Brevo (Sendinblue SAS, 106 boulevard Haussmann, 75008 Paris, Frankreich). Deine Daten werden auf Servern in der EU gespeichert. Mit Brevo besteht ein Auftragsverarbeitungsvertrag.

@@ -118,7 +118,7 @@ export default function Shop() {
     emailjs.init(EMAILJS_PUBLIC_KEY);
     supabase
       .from("reviews")
-      .select("customer_name, rating, text")
+      .select("customer_name, rating, text, photo_url")
       .eq("approved", true)
       .order("created_at", { ascending: false })
       .limit(3)
@@ -862,8 +862,7 @@ export default function Shop() {
                 </p>
               </div>
               <Link
-                to="/kontakt"
-                state={{ prefill: "Ich hätte gern folgendes individuelles Objekt drucken lassen: " }}
+                to="/anfrage"
                 className="sw-add-btn"
                 style={{ background: "var(--accent)", borderColor: "var(--accent)", textDecoration: "none" }}
               >
@@ -1021,6 +1020,10 @@ export default function Shop() {
             {reviews.length > 0
               ? reviews.map((r, i) => (
                   <div key={i} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: 20 }}>
+                    {r.photo_url && (
+                      <img src={r.photo_url} alt={`Foto von ${r.customer_name || "einer Kundin / einem Kunden"}`} loading="lazy"
+                        style={{ width: "calc(100% + 40px)", margin: "-20px -20px 14px", aspectRatio: "4 / 3", objectFit: "cover", display: "block", borderRadius: "14px 14px 0 0" }} />
+                    )}
                     <div style={{ display: "flex", gap: 2, marginBottom: 10 }}>
                       {[1, 2, 3, 4, 5].map((n) => (
                         <Star key={n} size={14} fill={n <= r.rating ? "var(--accent)" : "none"} color="var(--accent)" />
@@ -1031,7 +1034,7 @@ export default function Shop() {
                         „{r.text}"
                       </p>
                     )}
-                    <p style={{ fontSize: 12.5, fontWeight: 600, margin: 0 }}>– {r.customer_name}</p>
+                    <p style={{ fontSize: 12.5, fontWeight: 600, margin: 0 }}>– {r.customer_name || "Verifizierter Kauf"}</p>
                   </div>
                 ))
               : null}

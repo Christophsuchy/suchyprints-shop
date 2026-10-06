@@ -79,7 +79,7 @@ export default function Kontakt() {
               style={{ ...inputStyle, resize: "vertical", fontFamily: "'Inter', sans-serif" }}
             />
             <p style={{ color: "#7A7A82", fontSize: 12, marginTop: -8, marginBottom: 14 }}>
-              Fotos, Skizzen oder Maße kannst du uns einfach als Antwort auf unsere Bestätigungs-E-Mail schicken.
+              Du möchtest etwas drucken lassen? Über die <Link to="/anfrage" style={{ color: "#A85A32" }}>Anfrage-Seite</Link> kannst du gleich Fotos oder 3D-Dateien mitschicken.
             </p>
             {error && <p style={{ color: "#A32D2D", fontSize: 13, marginBottom: 12 }}>{error}</p>}
             <button

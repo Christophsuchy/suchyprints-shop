@@ -1,8 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Star, Loader2, Check } from "lucide-react";
+import { ArrowLeft, Star, Loader2, Check, Camera, X } from "lucide-react";
 
 const card = { background: "#fff", borderRadius: 16, padding: "28px 24px", border: "1px solid #ECE6DE" };
+async function shrinkToJpeg(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((resolve, reject) => { const i = new Image(); i.onload = () => resolve(i); i.onerror = reject; i.src = url; });
+    const scale = Math.min(1, 1200 / Math.max(img.width, img.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(img.width * scale);
+    c.height = Math.round(img.height * scale);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", 0.82);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 const field = { width: "100%", border: "1px solid #D9D2C8", borderRadius: 10, padding: "10px 12px", fontSize: 14, fontFamily: "'Inter', sans-serif", outline: "none", background: "#fff", color: "#2B2E4A" };
 
 export default function Bewertung() {
@@ -15,6 +30,7 @@ export default function Bewertung() {
   const [name, setName] = useState("");
   const [sending, setSending] = useState(false);
   const [formError, setFormError] = useState("");
+  const [photo, setPhoto] = useState(null); // dataURL
 
   useEffect(() => {
     fetch(`/api/review?token=${encodeURIComponent(token)}`)
@@ -39,10 +55,10 @@ export default function Bewertung() {
       const r = await fetch("/api/review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, rating, text, name }),
+        body: JSON.stringify({ token, rating, text, name, photo: photo ? photo.split(",")[1] : undefined }),
       });
       if (r.status === 409) setState("already");
-      else if (!r.ok) setFormError("Da ist etwas schiefgelaufen. Bitte später erneut versuchen.");
+      else if (!r.ok) setFormError(r.status === 400 ? "Bitte prüf deine Angaben (Sterne, Text, Foto)." : "Da ist etwas schiefgelaufen. Bitte später erneut versuchen.");
       else setState("done");
     } catch {
       setFormError("Da ist etwas schiefgelaufen. Bitte später erneut versuchen.");
@@ -109,6 +125,27 @@ export default function Bewertung() {
             <label style={{ display: "block", fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Angezeigter Name (optional)</label>
             <input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="z. B. Anna" style={{ ...field, marginBottom: 6 }} />
             <p style={{ fontSize: 12, color: "#7A7A82", margin: "0 0 18px" }}>Leer lassen, wenn du anonym bleiben möchtest.</p>
+            <label style={{ display: "block", fontSize: 13, fontWeight: 500, marginBottom: 8 }}>Foto (optional)</label>
+            {photo ? (
+              <div style={{ position: "relative", display: "inline-block", marginBottom: 18 }}>
+                <img src={photo} alt="Dein Foto" style={{ width: 140, height: 140, objectFit: "cover", borderRadius: 12, display: "block" }} />
+                <button type="button" aria-label="Foto entfernen" onClick={() => setPhoto(null)}
+                  style={{ position: "absolute", top: 6, right: 6, width: 26, height: 26, borderRadius: 999, border: "none", background: "rgba(0,0,0,0.6)", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <label style={{ display: "inline-flex", alignItems: "center", gap: 8, border: "1px dashed #D9D2C8", borderRadius: 12, padding: "12px 16px", fontSize: 13.5, cursor: "pointer", marginBottom: 18, color: "#5C5763", background: "#FBFAF7" }}>
+                <Camera size={16} color="#A85A32" /> Foto von deinem Teil hinzufügen
+                <input type="file" accept="image/*" style={{ display: "none" }}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = "";
+                    if (!file) return;
+                    try { setPhoto(await shrinkToJpeg(file)); } catch { setFormError("Das Foto konnte nicht gelesen werden. Bei iPhone-Fotos hilft es, sie als JPG zu speichern."); }
+                  }} />
+              </label>
+            )}
             {formError && <p style={{ color: "#A32D2D", fontSize: 13, margin: "0 0 12px" }}>{formError}</p>}
             <button type="submit" disabled={sending} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#A85A32", color: "#fff", border: "none", borderRadius: 999, padding: "12px 24px", fontSize: 14.5, fontWeight: 600, cursor: "pointer" }}>
               {sending && <Loader2 size={15} className="bw-spin" />} Bewertung absenden

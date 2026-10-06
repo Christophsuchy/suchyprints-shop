@@ -293,7 +293,15 @@ export default function ProductPage() {
                 </button>
               )
             ) : (
-              product.comingSoon ? (
+              product.category === "individuell" && !pers ? (
+                <Link
+                  to="/anfrage"
+                  state={{ kind: "Ersatzteil nach Foto oder Maß" }}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "linear-gradient(135deg, #C97A4E, #82431F)", color: "#fff", borderRadius: 999, padding: "13px 26px", fontSize: 14.5, fontWeight: 600, textDecoration: "none" }}
+                >
+                  Jetzt unverbindlich anfragen
+                </Link>
+              ) : product.comingSoon ? (
                 <NotifyMe product={product} />
               ) : (
                 <p style={{ color: "#7A7A82", fontSize: 14 }}>Aktuell leider ausverkauft – schau bald wieder vorbei.</p>
