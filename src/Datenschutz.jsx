@@ -26,18 +26,28 @@ export default function Datenschutz() {
 
         <h2 style={h2}>2. Welche Daten wir verarbeiten</h2>
         <p style={p}>
-          Wenn du über unseren Shop bestellst, verarbeiten wir die von dir angegebenen Daten (Name, E-Mail-Adresse, Bestellinhalt) zur Abwicklung deiner Bestellung. Diese Daten werden per E-Mail an uns übermittelt (über den Dienst EmailJS) und zusätzlich in einer Datenbank (Supabase, Hosting in der EU) gespeichert, damit wir Bestellungen verwalten können.
+          Wenn du über unseren Shop bestellst, verarbeiten wir die von dir angegebenen Daten (Name, E-Mail-Adresse, Bestellinhalt) zur Abwicklung deiner Bestellung. Diese Daten werden per E-Mail an uns übermittelt (über den Dienst EmailJS) und zusätzlich in einer Datenbank (Supabase, Hosting in der EU) gespeichert, damit wir Bestellungen verwalten können. Deine Bestellbestätigung erhältst du über den E-Mail-Dienst Brevo (Sendinblue SAS, Frankreich, Server in der EU). Die Lieferadresse übernehmen wir aus deiner PayPal-Zahlung.
         </p>
         <p style={p}>
           Der Inhalt deines Warenkorbs wird lokal in deinem Browser gespeichert (localStorage), damit er beim erneuten Besuch erhalten bleibt. Diese Daten verlassen dein Gerät nicht, bis du eine Bestellung abschickst.
         </p>
 
-        <h2 style={h2}>3. Zahlungsabwicklung</h2>
+        <h2 style={h2}>3. Kontaktformular und Anfragen</h2>
+        <p style={p}>
+          Wenn du uns über das Kontaktformular oder eine individuelle Anfrage schreibst, verarbeiten wir deinen Namen, deine E-Mail-Adresse und deine Nachricht, um deine Anfrage zu beantworten (Art. 6 Abs. 1 lit. b DSGVO). Die Nachricht wird über den Dienst EmailJS an unser Postfach weitergeleitet. Wir speichern Anfragen nur so lange, wie es für die Bearbeitung und eventuelle Folgefragen nötig ist.
+        </p>
+
+        <h2 style={h2}>4. Bewertungen</h2>
+        <p style={p}>
+          Nach einer Bestellung kannst du über einen persönlichen Link eine Bewertung abgeben. Wir speichern Sternebewertung, Text und – falls angegeben – den Namen, den du dafür wählst, gemeinsam mit einem Verweis auf die Bestellung (Art. 6 Abs. 1 lit. a DSGVO). Bewertungen werden erst nach unserer Prüfung im Shop angezeigt. Auf Wunsch löschen wir deine Bewertung jederzeit.
+        </p>
+
+        <h2 style={h2}>5. Zahlungsabwicklung</h2>
         <p style={p}>
           Zahlungen werden über PayPal abgewickelt. Dabei werden deine Zahlungsdaten direkt an PayPal (Europe) S.à r.l. et Cie, S.C.A. übermittelt und unterliegen deren Datenschutzbestimmungen. Wir selbst erhalten keine Kreditkarten- oder Kontodaten, lediglich die Bestätigung und Transaktionsnummer der Zahlung.
         </p>
 
-        <h2 style={h2}>4. Newsletter</h2>
+        <h2 style={h2}>6. Newsletter</h2>
         <p style={p}>
           Wenn du dich für unseren Newsletter anmeldest, verarbeiten wir deine E-Mail-Adresse auf Grundlage deiner Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), um dich über den Shop-Start, neue Produkte und Aktionen zu informieren. Die Anmeldung erfolgt im Double-Opt-in-Verfahren: Du erhältst zuerst eine E-Mail mit einem Bestätigungslink, erst danach wirst du eingetragen. Dabei werden der Zeitpunkt der Anmeldung und der Bestätigung gespeichert, um die Einwilligung nachweisen zu können.
         </p>
@@ -48,17 +58,17 @@ export default function Datenschutz() {
           Du kannst deine Einwilligung jederzeit widerrufen – über den Abmeldelink in jeder Newsletter-Mail oder per E-Mail an uns. Deine Adresse wird dann aus der Liste gelöscht.
         </p>
 
-        <h2 style={h2}>5. Hosting</h2>
+        <h2 style={h2}>7. Hosting</h2>
         <p style={p}>
-          Diese Website wird über Vercel Inc. gehostet. Beim Aufruf der Seite werden technisch notwendige Daten (z. B. IP-Adresse, Zugriffszeitpunkt) durch den Hosting-Anbieter verarbeitet, um die Seite auszuliefern.
+          Diese Website wird über Vercel Inc. gehostet. Beim Aufruf der Seite werden technisch notwendige Daten (z. B. IP-Adresse, Zugriffszeitpunkt) durch den Hosting-Anbieter verarbeitet, um die Seite auszuliefern. Vercel hat seinen Sitz in den USA; die Übermittlung erfolgt auf Grundlage des EU-US Data Privacy Framework bzw. der EU-Standardvertragsklauseln. Die Schriftarten dieser Website werden direkt von unserem Server geladen – es besteht dabei keine Verbindung zu Google.
         </p>
 
-        <h2 style={h2}>6. Deine Rechte</h2>
+        <h2 style={h2}>8. Deine Rechte</h2>
         <p style={p}>
           Du hast jederzeit das Recht auf Auskunft, Berichtigung, Löschung oder Einschränkung der Verarbeitung deiner Daten sowie ein Beschwerderecht bei der österreichischen Datenschutzbehörde. Wende dich dazu einfach an die oben genannte E-Mail-Adresse.
         </p>
 
-        <h2 style={h2}>7. Speicherdauer</h2>
+        <h2 style={h2}>9. Speicherdauer</h2>
         <p style={p}>
           Bestelldaten werden so lange gespeichert, wie es gesetzliche Aufbewahrungspflichten (insb. steuerrechtlich) vorschreiben, danach werden sie gelöscht. Newsletter-Daten speichern wir, bis du dich abmeldest.
         </p>
