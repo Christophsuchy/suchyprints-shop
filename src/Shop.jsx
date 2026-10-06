@@ -97,6 +97,7 @@ export default function Shop() {
   const [newsletterStatus, setNewsletterStatus] = useState(null);
   const [newsletterConsent, setNewsletterConsent] = useState(false);
   const [newsletterHoneypot, setNewsletterHoneypot] = useState("");
+  const [confirmBanner, setConfirmBanner] = useState(false);
   const [reviews, setReviews] = useState([]);
   const loaded = useRef(false);
 
@@ -128,6 +129,7 @@ export default function Shop() {
     try {
       if (new URLSearchParams(window.location.search).get("newsletter") === "bestaetigt") {
         setNewsletterStatus("confirmed");
+        setConfirmBanner(true);
         window.history.replaceState(null, "", window.location.pathname);
       }
     } catch (e) {
@@ -698,6 +700,20 @@ export default function Shop() {
         @keyframes sw-spin-anim { to { transform: rotate(360deg); } }
       `}</style>
 
+      {confirmBanner && (
+        <div role="status" style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(27,29,33,0.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setConfirmBanner(false)}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface, #fff)", color: "var(--ink)", borderRadius: 20, padding: "32px 28px", maxWidth: 420, width: "100%", textAlign: "center", boxShadow: "0 20px 50px rgba(0,0,0,0.25)", fontFamily: "var(--font-body)" }}>
+            <div style={{ width: 60, height: 60, borderRadius: 999, background: "rgba(15,110,86,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: 28, color: "#0F6E56" }}>✓</div>
+            <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 22, margin: "0 0 10px" }}>Danke, du bist dabei!</p>
+            <p style={{ color: "var(--muted)", fontSize: 14.5, lineHeight: 1.6, margin: "0 0 22px" }}>
+              Deine E-Mail-Adresse ist bestätigt. Wir sagen dir Bescheid, sobald es losgeht – und schicken dir ab und zu Neuigkeiten von SuchyPrints.
+            </p>
+            <button onClick={() => setConfirmBanner(false)} style={{ background: "var(--accent)", color: "#fff", border: "none", borderRadius: 999, padding: "12px 28px", fontSize: 14.5, fontWeight: 600, cursor: "pointer" }}>
+              Zum Shop
+            </button>
+          </div>
+        </div>
+      )}
       <div className={`sw-root ${darkMode ? "dark" : ""}`}>
         {/* Hinweis vor dem Shop-Start – wird über SHOP_OPEN in shopData.js gesteuert */}
         {!SHOP_OPEN && (
