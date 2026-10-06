@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "./supabaseClient";
 import { LogOut, Check, Clock, Loader2, Truck, Star, Eye, EyeOff, RefreshCw } from "lucide-react";
+import ProductsAdmin from "./admin/ProductsAdmin";
+import RequestsAdmin from "./admin/RequestsAdmin";
+import StatsAdmin from "./admin/StatsAdmin";
 
 function formatPrice(n) {
   return Number(n).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
@@ -79,6 +82,7 @@ export default function Dashboard() {
   const [tab, setTab] = useState("orders");
   const [orders, setOrders] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [shipOpen, setShipOpen] = useState(null);
 
@@ -94,12 +98,14 @@ export default function Dashboard() {
 
   async function load() {
     setLoading(true);
-    const [o, r] = await Promise.all([
+    const [o, r, q] = await Promise.all([
       supabase.from("orders").select("*").order("created_at", { ascending: false }),
       supabase.from("reviews").select("*").order("created_at", { ascending: false }),
+      supabase.from("requests").select("id, status"),
     ]);
     if (!o.error) setOrders(o.data);
     if (!r.error) setReviews(r.data);
+    if (!q.error) setRequests(q.data);
     setLoading(false);
   }
 
@@ -142,10 +148,11 @@ export default function Dashboard() {
 
   const pendingReviews = reviews.filter((r) => !r.approved).length;
   const openOrders = orders.filter((o) => (o.status || "neu") === "neu").length;
+  const openRequests = requests.filter((r) => r.status === "offen").length;
 
   return (
     <div style={{ fontFamily: "Inter, sans-serif", minHeight: "100vh", background: "#EDEEF1", padding: "32px 20px" }}>
-      <div style={{ maxWidth: 820, margin: "0 auto" }}>
+      <div style={{ maxWidth: 880, margin: "0 auto" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, gap: 10, flexWrap: "wrap" }}>
           <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 22, margin: 0 }}>SuchyPrints Dashboard</p>
           <div style={{ display: "flex", gap: 8 }}>
@@ -154,8 +161,14 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
-          {[["orders", `Bestellungen${openOrders ? ` (${openOrders} neu)` : ""}`], ["reviews", `Bewertungen${pendingReviews ? ` (${pendingReviews} zu prüfen)` : ""}`]].map(([id, label]) => (
+        <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
+          {[
+            ["orders", `Bestellungen${openOrders ? ` (${openOrders})` : ""}`],
+            ["requests", `Anfragen${openRequests ? ` (${openRequests})` : ""}`],
+            ["products", "Produkte"],
+            ["reviews", `Bewertungen${pendingReviews ? ` (${pendingReviews})` : ""}`],
+            ["stats", "Kennzahlen"],
+          ].map(([id, label]) => (
             <button key={id} onClick={() => setTab(id)}
               style={{ ...btn, background: tab === id ? "#1B1D21" : "#fff", color: tab === id ? "#fff" : "#1B1D21", borderColor: tab === id ? "#1B1D21" : "#D3D7DD", fontWeight: 500 }}>
               {label}
@@ -163,8 +176,14 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {loading ? (
+        {tab === "products" ? (
+          <ProductsAdmin />
+        ) : tab === "requests" ? (
+          <RequestsAdmin onCount={() => supabase.from("requests").select("id, status").then(({ data }) => data && setRequests(data))} />
+        ) : loading ? (
           <p style={{ color: "#6B7280" }}>Lädt…</p>
+        ) : tab === "stats" ? (
+          <StatsAdmin orders={orders} requests={requests} session={session} />
         ) : tab === "orders" ? (
           orders.length === 0 ? (
             <p style={{ color: "#6B7280" }}>Noch keine Bestellungen.</p>

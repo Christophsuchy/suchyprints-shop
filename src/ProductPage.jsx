@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Plus, Check } from "lucide-react";
-import { PRODUCTS, MATERIALS, PERSONALIZE_FONTS, formatPrice, cartKey } from "./shopData";
+import { MATERIALS, PERSONALIZE_FONTS, formatPrice, cartKey } from "./shopData";
+import { useProducts } from "./productStore";
 import PersonalizePreview from "./PersonalizePreview";
 import { Logo } from "./Shop";
 import ProductIllustration from "./ProductIllustration";
@@ -9,6 +10,8 @@ import NotifyMe from "./NotifyMe";
 
 export default function ProductPage() {
   const { id } = useParams();
+  const loadedProducts = useProducts();
+  const PRODUCTS = loadedProducts || [];
   const product = PRODUCTS.find((p) => p.id === id);
   const [added, setAdded] = useState(false);
   const [sel, setSel] = useState(0);
@@ -58,6 +61,14 @@ export default function ProductPage() {
       // Speichern fehlgeschlagen
     }
   };
+
+  if (!loadedProducts) {
+    return (
+      <div style={{ fontFamily: "'Inter', sans-serif", minHeight: "100vh", background: "#F7F4EF", color: "#7A7A82", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        Produkt wird geladen …
+      </div>
+    );
+  }
 
   if (!product) {
     return (

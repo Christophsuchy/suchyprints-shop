@@ -94,18 +94,59 @@ export default async function handler(req, res) {
   // Dateien: Bilder/PDF direkt, 3D-Modelle (gzip) gesammelt als ZIP
   const attachments = [];
   const models = [];
+  const stored = [];
   try {
     for (const f of (Array.isArray(body?.files) ? body.files : []).slice(0, 6)) {
       const name = clip(f?.name, 100).replace(/[\\/:*?"<>|]/g, "_");
       const buf = Buffer.from(String(f?.content || ""), "base64");
       if (!name || !buf.length) continue;
-      if (f.gzip && MODEL_EXT.test(name)) models.push({ name, data: gunzipSync(buf, { maxOutputLength: 60 * 1024 * 1024 }) });
-      else if (IMG_EXT.test(name)) attachments.push({ name, content: buf.toString("base64") });
+      if (f.gzip && MODEL_EXT.test(name)) {
+        const raw = gunzipSync(buf, { maxOutputLength: 60 * 1024 * 1024 });
+        models.push({ name, data: raw });
+        stored.push({ name, data: raw, type: "application/octet-stream" });
+      } else if (IMG_EXT.test(name)) {
+        attachments.push({ name, content: buf.toString("base64") });
+        stored.push({ name, data: buf, type: /\.pdf$/i.test(name) ? "application/pdf" : /\.png$/i.test(name) ? "image/png" : /\.gif$/i.test(name) ? "image/gif" : "image/jpeg" });
+      }
     }
     if (models.length) attachments.push({ name: "3D-Dateien.zip", content: makeZip(models).toString("base64") });
   } catch (err) {
     console.error("Dateien konnten nicht verarbeitet werden", err);
     return res.status(400).json({ error: "bad_files" });
+  }
+
+  // Anfrage zusätzlich in der Datenbank speichern (für die Übersicht im Dashboard).
+  // Schlägt das fehl, wird trotzdem gemailt.
+  const { SUPABASE_SERVICE_ROLE_KEY } = process.env;
+  const SUPABASE_URL = process.env.SUPABASE_URL || "https://opsbjglkegoyoeqmpxxa.supabase.co";
+  if (SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const auth = { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` };
+      const requestId = crypto.randomUUID();
+      const fileList = [];
+      for (const [i, f] of stored.entries()) {
+        const path = `${requestId}/${i + 1}-${f.name.replace(/[^\w.\-]+/g, "_")}`;
+        const up = await fetch(`${SUPABASE_URL}/storage/v1/object/request-files/${encodeURIComponent(path).replace(/%2F/g, "/")}`, {
+          method: "POST",
+          headers: { ...auth, "content-type": f.type },
+          body: f.data,
+        });
+        if (up.ok) fileList.push({ name: f.name, path, size: f.data.length });
+        else console.error("Datei-Upload fehlgeschlagen", up.status, await up.text());
+      }
+      const ins = await fetch(`${SUPABASE_URL}/rest/v1/requests`, {
+        method: "POST",
+        headers: { ...auth, "content-type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({
+          id: requestId, name: d.name, email: d.email, kind: d.kind, description: d.description,
+          details: { size: d.size, color: d.color, material: d.material, quantity: d.quantity, deadline: d.deadline, link: d.link },
+          files: fileList, status: "offen",
+        }),
+      });
+      if (!ins.ok) console.error("Anfrage speichern fehlgeschlagen", ins.status, await ins.text());
+    } catch (err) {
+      console.error("Anfrage speichern fehlgeschlagen", err);
+    }
   }
 
   const rows = [

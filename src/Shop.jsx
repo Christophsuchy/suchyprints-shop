@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { supabase } from "./supabaseClient";
 import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Loader2, Trash2, Sun, Moon, Truck, RotateCcw, ShieldCheck, ChevronDown, Tag, PenTool, Sparkles, Package, Mail, Star } from "lucide-react";
-import { CATEGORIES, MATERIALS, PRODUCTS, TAG_LABELS, DISCOUNT_CODES, FAQS, SHOP_OPEN, SHIPPING_RATES, formatPrice, parseCartKey, colorLabel, personalizeLabel } from "./shopData";
+import { CATEGORIES, MATERIALS, TAG_LABELS, DISCOUNT_CODES, FAQS, SHOP_OPEN, SHIPPING_RATES, formatPrice, parseCartKey, colorLabel, personalizeLabel } from "./shopData";
 import ProductIllustration from "./ProductIllustration";
+import { useProducts } from "./productStore";
 import { EMAILJS_SERVICE_ID, EMAILJS_PUBLIC_KEY, SHOP_OWNER_EMAIL, EMAILJS_ORDER_TEMPLATE_ID } from "./emailConfig";
 
 const EMAILJS_TEMPLATE_ID = EMAILJS_ORDER_TEMPLATE_ID;
@@ -73,6 +74,9 @@ export function Logo({ size = 44, withText = true, color = "#2B2E4A", accent = "
 }
 
 export default function Shop() {
+  const loadedProducts = useProducts();
+  const PRODUCTS = loadedProducts || [];
+  const productsLoading = !loadedProducts;
   const [cart, setCart] = useState({});
   const [mode, setMode] = useState("fertig"); // "fertig" | "individuell"
   const [category, setCategory] = useState("alle");
@@ -183,7 +187,7 @@ export default function Shop() {
       const matchCat = category === "alle" || p.category === category;
       return p.category !== "individuell" && matchCat;
     });
-  }, [mode, category, query]);
+  }, [mode, category, query, loadedProducts]);
 
   const countFertig = PRODUCTS.filter((p) => p.category !== "individuell").length;
   const countIndividuell = PRODUCTS.filter((p) => p.category === "individuell").length;
@@ -210,7 +214,7 @@ export default function Shop() {
         colorText: colors.length ? colors.map((c) => colorLabel(product, c)).join(" + ") : "",
         personalText: personalizeLabel(product, { text, font, extra }),
       }));
-  }, [cart]);
+  }, [cart, loadedProducts]);
 
   const cartCount = cartItems.reduce((s, i) => s + i.qty, 0);
   const subtotal = cartItems.reduce((s, i) => s + i.qty * i.price, 0);
@@ -890,7 +894,9 @@ export default function Shop() {
 
         {/* Produktgrid */}
         <section style={{ maxWidth: 1080, margin: "0 auto", padding: "20px 24px 80px" }}>
-          {filtered.length === 0 ? (
+          {productsLoading ? (
+            <p style={{ color: "var(--muted)", textAlign: "center", padding: "40px 0" }}>Produkte werden geladen …</p>
+          ) : filtered.length === 0 ? (
             <p style={{ color: "var(--muted)", textAlign: "center", padding: "40px 0" }}>Keine Produkte gefunden.</p>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 12 }}>
