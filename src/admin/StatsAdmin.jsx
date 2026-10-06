@@ -118,6 +118,17 @@ export default function StatsAdmin({ orders, requests, session }) {
           <p style={{ fontSize: 11.5, color: "#9CA3AF", margin: "10px 0 0" }}>Bestätigte Kontakte laut Brevo.</p>
         </div>
       </div>
+
+      <div style={{ ...card, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <div>
+          <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>Besucher & Herkunft</p>
+          <p style={{ margin: "2px 0 0", fontSize: 12.5, color: "#6B7280" }}>Besucherzahlen, meistbesuchte Seiten und woher die Leute kommen (z. B. Instagram) – bei Vercel Analytics.</p>
+        </div>
+        <a href="https://vercel.com/suchyprints/suchyprints-webshop/analytics" target="_blank" rel="noreferrer"
+          style={{ border: "1px solid #D3D7DD", background: "#1B1D21", color: "#fff", borderRadius: 8, padding: "8px 14px", fontSize: 13, textDecoration: "none", whiteSpace: "nowrap" }}>
+          Besucherstatistik öffnen ↗
+        </a>
+      </div>
     </div>
   );
 }

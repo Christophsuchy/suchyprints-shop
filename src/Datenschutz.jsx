@@ -60,7 +60,7 @@ export default function Datenschutz() {
 
         <h2 style={h2}>7. Hosting</h2>
         <p style={p}>
-          Diese Website wird über Vercel Inc. gehostet. Beim Aufruf der Seite werden technisch notwendige Daten (z. B. IP-Adresse, Zugriffszeitpunkt) durch den Hosting-Anbieter verarbeitet, um die Seite auszuliefern. Vercel hat seinen Sitz in den USA; die Übermittlung erfolgt auf Grundlage des EU-US Data Privacy Framework bzw. der EU-Standardvertragsklauseln. Die Schriftarten dieser Website werden direkt von unserem Server geladen – es besteht dabei keine Verbindung zu Google.
+          Diese Website wird über Vercel Inc. gehostet. Beim Aufruf der Seite werden technisch notwendige Daten (z. B. IP-Adresse, Zugriffszeitpunkt) durch den Hosting-Anbieter verarbeitet, um die Seite auszuliefern. Vercel hat seinen Sitz in den USA; die Übermittlung erfolgt auf Grundlage des EU-US Data Privacy Framework bzw. der EU-Standardvertragsklauseln. Die Schriftarten dieser Website werden direkt von unserem Server geladen – es besteht dabei keine Verbindung zu Google. Für eine anonyme Besucherstatistik nutzen wir Vercel Web Analytics. Dabei werden keine Cookies gesetzt und keine personenbezogenen Profile erstellt; erfasst werden nur zusammengefasste Angaben wie aufgerufene Seiten, Herkunftsseite, Land, Gerätetyp und Browser. Besucher werden nicht seitenübergreifend wiedererkannt (Art. 6 Abs. 1 lit. f DSGVO – berechtigtes Interesse an der Verbesserung unseres Angebots).
         </p>
 
         <h2 style={h2}>8. Deine Rechte</h2>
