@@ -33,8 +33,8 @@ export default function Impressum() {
             Kontakt
           </h2>
           <p style={{ lineHeight: 1.7, fontSize: 14.5, margin: 0 }}>
-            E-Mail: christoph.suchy@suchyprints.at<br />
-            Telefon: wird ergänzt
+            E-Mail:{" "}
+            <a href="mailto:christoph.suchy@suchyprints.at" style={{ color: "#A85A32" }}>christoph.suchy@suchyprints.at</a>
           </p>
         </section>
 
@@ -43,19 +43,27 @@ export default function Impressum() {
             Gewerberechtliche Angaben
           </h2>
           <p style={{ lineHeight: 1.7, fontSize: 14.5, margin: 0, color: "#7A7A82" }}>
-            Gewerbeanmeldung ausständig – wird in Kürze ergänzt.
+            Die gewerberechtlichen Angaben werden mit Aufnahme der gewerblichen Tätigkeit ergänzt.
+          </p>
+        </section>
+
+        <section style={{ marginBottom: 28 }}>
+          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 16, margin: "0 0 10px" }}>
+            Offenlegung gemäß § 25 Mediengesetz
+          </h2>
+          <p style={{ lineHeight: 1.7, fontSize: 14.5, margin: 0 }}>
+            Medieninhaber: Christoph Suchy, Murgasse 3, 8121 Deutschfeistritz, Österreich<br />
+            Unternehmensgegenstand: Herstellung und Verkauf von 3D-gedruckten Produkten<br />
+            Grundlegende Richtung: Information über die Produkte und Leistungen von SuchyPrints
           </p>
         </section>
 
         <section>
           <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 16, margin: "0 0 10px" }}>
-            EU-Streitschlichtung
+            Verbraucherstreitbeilegung
           </h2>
           <p style={{ lineHeight: 1.7, fontSize: 14.5, margin: 0 }}>
-            Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit, abrufbar unter{" "}
-            <a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noreferrer" style={{ color: "#A85A32" }}>
-              ec.europa.eu/consumers/odr
-            </a>.
+            Zur Teilnahme an einem Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle sind wir nicht verpflichtet. Bei Fragen oder Problemen schreib uns einfach – wir finden gemeinsam eine Lösung.
           </p>
         </section>
       </div>
