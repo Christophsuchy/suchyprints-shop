@@ -61,7 +61,6 @@ export default function ProductPage() {
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", minHeight: "100vh", background: "#F7F4EF", color: "#2B2E4A" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 .pp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
         @media (max-width: 700px) {
           .pp-grid { grid-template-columns: 1fr; gap: 24px; }
@@ -195,6 +194,10 @@ export default function ProductPage() {
                 {formatPrice(product.price)}
               </span>
             </div>
+            <p style={{ fontSize: 12, color: "#7A7A82", margin: "-18px 0 24px", lineHeight: 1.5 }}>
+              Keine USt. gem. § 6 Abs. 1 Z 27 UStG (Kleinunternehmer) · zzgl.{" "}
+              <Link to="/agb" style={{ color: "#7A7A82" }}>Versand</Link> 4,90 €, gratis ab 50 €
+            </p>
 
             {product.inStock ? (
               added ? (

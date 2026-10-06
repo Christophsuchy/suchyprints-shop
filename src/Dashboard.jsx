@@ -54,7 +54,7 @@ export default function Dashboard() {
     return (
       <div style={{ fontFamily: "Inter, sans-serif", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#EDEEF1" }}>
         <form onSubmit={handleLogin} style={{ background: "#fff", border: "1px solid #D3D7DD", borderRadius: 14, padding: "32px 28px", width: 320 }}>
-          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 20, margin: "0 0 20px" }}>SchichtWerk Dashboard</p>
+          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 20, margin: "0 0 20px" }}>SuchyPrints Dashboard</p>
           <input
             placeholder="E-Mail"
             type="email"

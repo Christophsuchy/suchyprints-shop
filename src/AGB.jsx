@@ -9,7 +9,6 @@ export default function AGB() {
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", minHeight: "100vh", background: "#F7F4EF", color: "#2B2E4A" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap');
       `}</style>
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "48px 24px 80px" }}>
         <Link to="/" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#7A7A82", fontSize: 13.5, textDecoration: "none", marginBottom: 32 }}>
@@ -30,7 +29,7 @@ export default function AGB() {
 
         <h2 style={h2}>3. Preise und Zahlung</h2>
         <p style={p}>
-          Alle angegebenen Preise verstehen sich in Euro. Die Zahlung erfolgt ausschließlich über PayPal. Der Kaufpreis ist mit Vertragsschluss fällig.
+          Alle angegebenen Preise verstehen sich in Euro. Gemäß § 6 Abs. 1 Z 27 UStG wird keine Umsatzsteuer berechnet (Kleinunternehmerregelung). Für den Versand innerhalb Österreichs fallen 4,90 € an; ab einem Bestellwert von 50 € (nach Abzug eventueller Rabatte) ist der Versand kostenlos. Die Versandkosten werden vor Abschluss der Bestellung im Warenkorb angezeigt. Die Zahlung erfolgt ausschließlich über PayPal. Der Kaufpreis ist mit Vertragsschluss fällig.
         </p>
 
         <h2 style={h2}>4. Individuelle Anfertigungen</h2>

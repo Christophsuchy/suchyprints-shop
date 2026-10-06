@@ -9,6 +9,11 @@ import { EMAILJS_SERVICE_ID, EMAILJS_PUBLIC_KEY, SHOP_OWNER_EMAIL, EMAILJS_ORDER
 
 const EMAILJS_TEMPLATE_ID = EMAILJS_ORDER_TEMPLATE_ID;
 
+// Versandkosten innerhalb Österreichs
+const SHIPPING_COST = 4.9;
+const FREE_SHIPPING_FROM = 50;
+const TAX_NOTE = "Gemäß § 6 Abs. 1 Z 27 UStG wird keine Umsatzsteuer berechnet (Kleinunternehmerregelung).";
+
 // PayPal-Zugangsdaten – auf https://developer.paypal.com kostenlos anlegen,
 // eine App erstellen und hier die Client-ID eintragen.
 const PAYPAL_CLIENT_ID = "BAAbt6-M-UrLXLYJs1vpSB0WndDVNMx5A2nnok-mVTllnZiRQnzAp9E7Mv1NLyb50Cd9zMQHYs28OIXpSI";
@@ -205,7 +210,9 @@ export default function Shop() {
 
   const cartCount = cartItems.reduce((s, i) => s + i.qty, 0);
   const subtotal = cartItems.reduce((s, i) => s + i.qty * i.price, 0);
-  const discountedTotal = discountApplied ? subtotal * (1 - discountApplied.percent) : subtotal;
+  const discountedTotal = Math.round((discountApplied ? subtotal * (1 - discountApplied.percent) : subtotal) * 100) / 100;
+  const shippingCost = cartItems.length > 0 && discountedTotal < FREE_SHIPPING_FROM ? SHIPPING_COST : 0;
+  const grandTotal = Math.round((discountedTotal + shippingCost) * 100) / 100;
 
   const applyDiscountCode = () => {
     const code = discountCode.trim().toUpperCase();
@@ -251,13 +258,17 @@ export default function Shop() {
     });
   const removeItem = (id) => setCart((c) => { const n = { ...c }; delete n[id]; return n; });
 
-  const finalizeOrder = async (paypalTransactionId) => {
+  const finalizeOrder = async (paypalTransactionId, shippingInfo) => {
     setSendError("");
     setSending(true);
     const orderDetails = cartItems
       .map((i) => `${i.qty}x ${i.name}${i.colorText ? ` – Farbe: ${i.colorText}` : ""} (${formatPrice(i.price)} pro Stück) = ${formatPrice(i.qty * i.price)}`)
-      .join("\n");
+      .join("\n") +
+      (discountApplied ? `\nRabatt (${discountApplied.code}): -${formatPrice(subtotal - discountedTotal)}` : "") +
+      `\nVersand: ${shippingCost > 0 ? formatPrice(shippingCost) : "gratis"}` +
+      (shippingInfo ? `\n\nLieferadresse:\n${shippingInfo}` : "");
     const itemsForDb = cartItems.map((i) => ({ name: i.colorText ? `${i.name} (${i.colorText})` : i.name, qty: i.qty, price: i.price }));
+    if (shippingCost > 0) itemsForDb.push({ name: "Versand", qty: 1, price: shippingCost });
     try {
       const { data: insertedOrder, error: dbError } = await supabase
         .from("orders")
@@ -265,13 +276,22 @@ export default function Shop() {
           customer_name: customerName,
           customer_email: customerEmail,
           items: itemsForDb,
-          total: discountedTotal,
+          total: grandTotal,
           payment_status: "bezahlt",
           paypal_transaction_id: paypalTransactionId,
         })
         .select()
         .single();
       if (dbError) console.error("Bestellung konnte nicht im Dashboard gespeichert werden:", dbError);
+
+      // Bestellbestätigung an den Kunden (über Brevo, Daten werden serverseitig aus Supabase geprüft)
+      if (insertedOrder?.id) {
+        fetch("/api/order-confirmation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId: insertedOrder.id, transactionId: paypalTransactionId, shippingInfo }),
+        }).catch((e) => console.error("Bestellbestätigung konnte nicht gesendet werden:", e));
+      }
 
       const reviewLink = insertedOrder?.review_token
         ? `https://suchyprints.at/bewertung/${insertedOrder.review_token}`
@@ -285,7 +305,7 @@ export default function Shop() {
           customer_name: customerName,
           customer_email: customerEmail,
           order_details: orderDetails,
-          total: formatPrice(discountedTotal),
+          total: formatPrice(grandTotal),
           payment_info: `Bezahlt via PayPal (Transaktion ${paypalTransactionId})${discountApplied ? ` · Rabattcode ${discountApplied.code} (-${Math.round(discountApplied.percent * 100)}%)` : ""}`,
           review_link: reviewLink,
         }
@@ -310,21 +330,37 @@ export default function Shop() {
         style: { layout: "vertical", color: "black", shape: "pill", label: "paypal", height: 45 },
         createOrder: (data, actions) =>
           actions.order.create({
-            purchase_units: [{ amount: { value: discountedTotal.toFixed(2), currency_code: "EUR" } }],
+            purchase_units: [
+              {
+                description: "SuchyPrints Bestellung",
+                amount: {
+                  value: grandTotal.toFixed(2),
+                  currency_code: "EUR",
+                  breakdown: {
+                    item_total: { value: discountedTotal.toFixed(2), currency_code: "EUR" },
+                    shipping: { value: shippingCost.toFixed(2), currency_code: "EUR" },
+                  },
+                },
+              },
+            ],
           }),
         onApprove: async (data, actions) => {
           const details = await actions.order.capture();
-          await finalizeOrder(details.id);
+          const ship = details?.purchase_units?.[0]?.shipping;
+          const a = ship?.address;
+          const shippingInfo = a
+            ? [ship?.name?.full_name, a.address_line_1, a.address_line_2, `${a.postal_code || ""} ${a.admin_area_2 || ""}`.trim(), a.country_code].filter(Boolean).join("\n")
+            : "";
+          await finalizeOrder(details.id, shippingInfo);
         },
         onError: () => setSendError("PayPal-Zahlung fehlgeschlagen. Bitte erneut versuchen."),
       })
       .render(paypalRef.current);
-  }, [paypalReady, customerName, customerEmail, discountedTotal, cartItems.length, checkoutDone]);
+  }, [paypalReady, customerName, customerEmail, grandTotal, cartItems.length, checkoutDone]);
 
   return (
     <div className={`sw-app ${darkMode ? "dark" : ""}`} style={{ fontFamily: "var(--font-body)", color: "var(--ink)", background: "var(--bg)", minHeight: "100%" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
         :root {
           --bg: #F7F4EF;
           --surface: #FFFFFF;
@@ -1123,7 +1159,7 @@ export default function Shop() {
           </div>
           <div style={{ maxWidth: 1080, margin: "0 auto", padding: "16px 24px 32px", borderTop: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
             <p style={{ color: "var(--muted)", fontSize: 12, margin: 0 }}>
-              © {new Date().getFullYear()} SuchyPrints
+              © {new Date().getFullYear()} SuchyPrints · Alle Preise ohne USt. (Kleinunternehmer gem. § 6 Abs. 1 Z 27 UStG), zzgl. Versand
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
               <Link to="/impressum" style={{ color: "var(--muted)", fontSize: 12.5, textDecoration: "none" }}>Impressum</Link>
@@ -1223,14 +1259,28 @@ export default function Shop() {
             </p>
           )}
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, padding: "10px 14px", borderRadius: 12, background: "rgba(168, 90, 50, 0.08)" }}>
-            <span style={{ fontSize: 13.5, color: "var(--ink)", fontWeight: 500 }}>Zwischensumme</span>
-            <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-              {discountApplied && (
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--muted)", textDecoration: "line-through" }}>{formatPrice(subtotal)}</span>
-              )}
-              <span style={{ fontFamily: "var(--font-mono)", fontWeight: 600, fontSize: 17, color: "var(--accent-dark)" }}>{formatPrice(discountedTotal)}</span>
-            </span>
+          <div style={{ marginBottom: 14, padding: "10px 14px", borderRadius: 12, background: "rgba(168, 90, 50, 0.08)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: 13, color: "var(--muted)", marginBottom: 4 }}>
+              <span>Zwischensumme</span>
+              <span style={{ display: "flex", alignItems: "baseline", gap: 8, fontFamily: "var(--font-mono)" }}>
+                {discountApplied && <span style={{ textDecoration: "line-through" }}>{formatPrice(subtotal)}</span>}
+                <span>{formatPrice(discountedTotal)}</span>
+              </span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: 13, color: "var(--muted)", marginBottom: 8 }}>
+              <span>Versand (Österreich)</span>
+              <span style={{ fontFamily: "var(--font-mono)" }}>{shippingCost > 0 ? formatPrice(shippingCost) : "gratis"}</span>
+            </div>
+            {shippingCost > 0 && (
+              <p style={{ fontSize: 11.5, color: "var(--muted)", margin: "-4px 0 8px" }}>
+                Noch {formatPrice(FREE_SHIPPING_FROM - discountedTotal)} bis zum Gratisversand
+              </p>
+            )}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--line)", paddingTop: 8 }}>
+              <span style={{ fontSize: 13.5, color: "var(--ink)", fontWeight: 600 }}>Gesamt</span>
+              <span style={{ fontFamily: "var(--font-mono)", fontWeight: 600, fontSize: 17, color: "var(--accent-dark)" }}>{formatPrice(grandTotal)}</span>
+            </div>
+            <p style={{ fontSize: 10.5, color: "var(--muted)", margin: "6px 0 0", lineHeight: 1.4 }}>{TAX_NOTE}</p>
           </div>
 
           {!checkoutDone && (

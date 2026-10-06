@@ -6,7 +6,6 @@ export default function NotFound() {
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", minHeight: "100vh", background: "#F7F4EF", color: "#2B2E4A", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap');
       `}</style>
       <div style={{ textAlign: "center", maxWidth: 380 }}>
         <div style={{ width: 64, height: 64, borderRadius: 999, background: "rgba(168, 90, 50, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>

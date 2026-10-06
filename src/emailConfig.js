@@ -1,6 +1,6 @@
 // EmailJS-Zugangsdaten – auf https://www.emailjs.com/ kostenlos anlegen
 // und hier die Werte aus deinem Account eintragen.
-export const EMAILJS_SERVICE_ID = "service_tks1mei";
+export const EMAILJS_SERVICE_ID = "service_y3k1fwc";
 export const EMAILJS_PUBLIC_KEY = "GRw99PmWJicyivjXB";
 
 // Wohin Bestell- und Kontaktbenachrichtigungen gehen sollen:

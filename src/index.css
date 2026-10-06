@@ -1,3 +1,8 @@
+/* Schriften lokal gehostet (keine Verbindung zu Google) – Lizenz: SIL OFL, siehe public/fonts */
+@font-face { font-family: "Inter"; src: url("/fonts/inter-var.woff") format("woff"); font-weight: 400 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Space Grotesk"; src: url("/fonts/space-grotesk-var.woff") format("woff"); font-weight: 500 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "JetBrains Mono"; src: url("/fonts/jetbrains-mono-var.woff") format("woff"); font-weight: 400 500; font-style: normal; font-display: swap; }
+
 * {
   box-sizing: border-box;
 }
