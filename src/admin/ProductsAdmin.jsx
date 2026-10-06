@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import ShopPreview from "./ShopPreview";
 import { supabase } from "../supabaseClient";
 import { PRODUCTS as STATIC_PRODUCTS, CATEGORIES, MATERIALS, TAG_LABELS } from "../shopData";
 import { productToData, COLOR_SETS } from "../productStore";
 import { btn, btnDark, inp, card, lbl, euro } from "./ui";
-import { Pencil, Plus, ArrowUp, ArrowDown, Eye, EyeOff, Upload, X, Loader2, Save, Trash2, ChevronLeft, Download } from "lucide-react";
+import { Pencil, Plus, Eye, EyeOff, Upload, X, Loader2, Save, Trash2, ChevronLeft, Download, GripVertical, Check } from "lucide-react";
 
 const STATUS = [
   { id: "verfuegbar", label: "Verfügbar (bestellbar)", inStock: true, comingSoon: false, color: "#27500A", bg: "#EAF3DE" },
@@ -235,15 +236,63 @@ export default function ProductsAdmin() {
     if (error) return setErr("Übernehmen fehlgeschlagen: " + error.message);
     load();
   };
-  const move = async (i, dir) => {
-    const a = rows[i], b = rows[i + dir];
-    if (!a || !b) return;
-    await Promise.all([
-      supabase.from("products").update({ sort: b.sort }).eq("id", a.id),
-      supabase.from("products").update({ sort: a.sort }).eq("id", b.id),
-    ]);
-    load();
+  // --- Ziehen & Ablegen (Maus und Touch) ---
+  const [dragId, setDragId] = useState(null);
+  const [saveState, setSaveState] = useState(null); // saving | saved
+  const listRef = useRef(null);
+  const rowsRef = useRef(rows);
+  rowsRef.current = rows;
+
+  const persistOrder = async (ordered) => {
+    const changed = ordered.map((r, i) => ({ r, sort: (i + 1) * 10 })).filter(({ r, sort }) => r.sort !== sort);
+    if (!changed.length) return;
+    setSaveState("saving");
+    const results = await Promise.all(changed.map(({ r, sort }) => supabase.from("products").update({ sort }).eq("id", r.id)));
+    const failed = results.find((x) => x.error);
+    if (failed) { setErr("Reihenfolge speichern fehlgeschlagen: " + failed.error.message); setSaveState(null); return load(); }
+    setRows(ordered.map((r, i) => ({ ...r, sort: (i + 1) * 10 })));
+    setSaveState("saved");
+    setTimeout(() => setSaveState(null), 1500);
   };
+
+  const startDrag = (e, id) => {
+    e.preventDefault();
+    setDragId(id);
+    const onMove = (ev) => {
+      const y = ev.clientY;
+      const current = rowsRef.current;
+      const from = current.findIndex((r) => r.id === id);
+      const els = [...(listRef.current?.querySelectorAll("[data-row]") || [])];
+      // Einfügeposition = Anzahl der anderen Zeilen, deren Mitte oberhalb des Zeigers liegt
+      let to = 0;
+      els.forEach((el, i) => {
+        if (i === from) return;
+        const b = el.getBoundingClientRect();
+        if (b.top + b.height / 2 < y) to += 1;
+      });
+      if (to !== from) {
+        const next = [...current];
+        const [m] = next.splice(from, 1);
+        next.splice(to, 0, m);
+        rowsRef.current = next;
+        setRows(next);
+      }
+      // Am Rand automatisch scrollen
+      if (y < 60) window.scrollBy(0, -12);
+      else if (y > window.innerHeight - 60) window.scrollBy(0, 12);
+    };
+    const onUp = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      setDragId(null);
+      persistOrder(rowsRef.current);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+  };
+
   const toggle = async (r) => { await supabase.from("products").update({ active: !r.active }).eq("id", r.id); load(); };
   const create = () => {
     const max = Math.max(0, ...rows.map((r) => Number(String(r.id).replace(/\D/g, "")) || 0), ...STATIC_PRODUCTS.map((p) => Number(p.id.replace(/\D/g, "")) || 0));
@@ -270,35 +319,57 @@ export default function ProductsAdmin() {
         </div>
       ) : (
         <>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <span style={{ fontSize: 13, color: "#6B7280" }}>{rows.filter((r) => r.active).length} sichtbar · {rows.length} gesamt</span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 13, color: "#6B7280" }}>
+              {rows.filter((r) => r.active).length} sichtbar · {rows.length} gesamt · zum Sortieren am <GripVertical size={12} style={{ verticalAlign: "-2px" }} /> ziehen
+              {saveState === "saving" && <span style={{ marginLeft: 8 }}><Loader2 size={12} style={{ verticalAlign: "-2px" }} /> speichert…</span>}
+              {saveState === "saved" && <span style={{ marginLeft: 8, color: "#27500A" }}><Check size={12} style={{ verticalAlign: "-2px" }} /> gespeichert</span>}
+            </span>
             <button onClick={create} style={btnDark}><Plus size={14} /> Neues Produkt</button>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {rows.map((r, i) => {
-              const d = r.data || {};
-              const st = statusOf(d);
-              return (
-                <div key={r.id} style={{ ...card, padding: "10px 12px", display: "flex", alignItems: "center", gap: 12, opacity: r.active ? 1 : 0.55 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 8, overflow: "hidden", background: d.images?.length ? "#F7F4EF" : d.hue, flexShrink: 0 }}>
-                    {d.images?.[0] && <img src={d.images[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+          <div className="pa-layout" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 360px)", gap: 16, alignItems: "start" }}>
+            <div ref={listRef} style={{ display: "flex", flexDirection: "column", gap: 8, userSelect: dragId ? "none" : undefined }}>
+              {rows.map((r) => {
+                const d = r.data || {};
+                const st = statusOf(d);
+                const dragging = dragId === r.id;
+                return (
+                  <div key={r.id} data-row
+                    style={{ ...card, padding: "8px 10px", display: "flex", alignItems: "center", gap: 10, opacity: r.active ? 1 : 0.55,
+                      boxShadow: dragging ? "0 10px 24px rgba(0,0,0,0.18)" : "none", borderColor: dragging ? "#A85A32" : "#D3D7DD",
+                      transform: dragging ? "scale(1.01)" : "none", transition: "box-shadow .12s, transform .12s", background: "#fff" }}>
+                    <span onPointerDown={(e) => startDrag(e, r.id)} title="Ziehen zum Sortieren" aria-label="Ziehen zum Sortieren"
+                      style={{ cursor: dragging ? "grabbing" : "grab", color: "#9CA3AF", padding: "6px 2px", touchAction: "none", display: "flex" }}>
+                      <GripVertical size={18} />
+                    </span>
+                    <div style={{ width: 44, height: 44, borderRadius: 8, overflow: "hidden", background: d.images?.length ? "#F7F4EF" : d.hue, flexShrink: 0 }}>
+                      {d.images?.[0] && <img src={d.images[0]} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontWeight: 600, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.name}</p>
+                      <p style={{ margin: "2px 0 0", fontSize: 12.5, color: "#6B7280", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {euro(d.price)} · <span style={{ background: st.bg, color: st.color, borderRadius: 999, padding: "1px 8px" }}>{st.label.replace(" (bestellbar)", "")}</span>{!r.active && " · ausgeblendet"}
+                      </p>
+                    </div>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <button onClick={() => toggle(r)} style={{ ...btn, padding: "6px 7px" }} aria-label={r.active ? "Ausblenden" : "Einblenden"} title={r.active ? "Im Shop ausblenden" : "Im Shop einblenden"}>{r.active ? <Eye size={13} /> : <EyeOff size={13} />}</button>
+                      <button onClick={() => setEditing(r)} style={btn}><Pencil size={13} /> <span className="pa-hide-sm">Bearbeiten</span></button>
+                    </div>
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: 0, fontWeight: 600, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.name}</p>
-                    <p style={{ margin: "2px 0 0", fontSize: 12.5, color: "#6B7280" }}>
-                      {euro(d.price)} · <span style={{ background: st.bg, color: st.color, borderRadius: 999, padding: "1px 8px" }}>{st.label.replace(" (bestellbar)", "")}</span>{!r.active && " · ausgeblendet"}
-                    </p>
-                  </div>
-                  <div style={{ display: "flex", gap: 4 }}>
-                    <button onClick={() => move(i, -1)} disabled={i === 0} style={{ ...btn, padding: "6px 7px" }} aria-label="Nach oben"><ArrowUp size={13} /></button>
-                    <button onClick={() => move(i, 1)} disabled={i === rows.length - 1} style={{ ...btn, padding: "6px 7px" }} aria-label="Nach unten"><ArrowDown size={13} /></button>
-                    <button onClick={() => toggle(r)} style={{ ...btn, padding: "6px 7px" }} aria-label={r.active ? "Ausblenden" : "Einblenden"} title={r.active ? "Ausblenden" : "Einblenden"}>{r.active ? <Eye size={13} /> : <EyeOff size={13} />}</button>
-                    <button onClick={() => setEditing(r)} style={btn}><Pencil size={13} /> Bearbeiten</button>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+            <div className="pa-preview" style={{ position: "sticky", top: 16 }}>
+              <ShopPreview rows={rows} highlight={dragId} />
+            </div>
           </div>
+          <style>{`
+            @media (max-width: 760px) {
+              .pa-layout { grid-template-columns: 1fr !important; }
+              .pa-preview { position: static !important; order: -1; }
+              .pa-hide-sm { display: none; }
+            }
+          `}</style>
         </>
       )}
     </div>
