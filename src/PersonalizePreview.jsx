@@ -32,7 +32,7 @@ export default function PersonalizePreview({ product, colorCss, text, fontId }) 
   const type = product.personalize?.type;
   const base = colorCss && colorCss.startsWith("#") ? colorCss : "#8a8d91";
   const font = PERSONALIZE_FONTS.find((f) => f.id === fontId) || PERSONALIZE_FONTS[0];
-  const shown = text?.trim() || (type === "bowl" ? "Mufasa" : type === "keychain" ? "Anna" : "Dein Name");
+  const shown = text?.trim() || (type === "bowl" ? "Bello" : type === "keychain" ? "Anna" : "Dein Name");
   const placeholder = !text?.trim();
   const dark = shade(base, -0.35);
   const darker = shade(base, -0.55);
