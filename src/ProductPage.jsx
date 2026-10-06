@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Plus, Check } from "lucide-react";
-import { PRODUCTS, MATERIALS, formatPrice, cartKey } from "./shopData";
+import { PRODUCTS, MATERIALS, PERSONALIZE_FONTS, formatPrice, cartKey } from "./shopData";
+import PersonalizePreview from "./PersonalizePreview";
 import { Logo } from "./Shop";
 import ProductIllustration from "./ProductIllustration";
+import NotifyMe from "./NotifyMe";
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -12,9 +14,15 @@ export default function ProductPage() {
   const [sel, setSel] = useState(0);
   const colorCount = product?.colorCount || 0;
   const [picks, setPicks] = useState([]);
+  const [pText, setPText] = useState("");
+  const [pFont, setPFont] = useState(PERSONALIZE_FONTS[0].id);
+  const [pExtra, setPExtra] = useState("");
+  const pers = product?.personalize;
   // Beim Wechsel zu einem anderen Produkt Auswahl zurücksetzen
-  useEffect(() => { setPicks([]); setSel(0); setAdded(false); }, [id]);
-  const pickedAll = !colorCount || (picks.length === colorCount && picks.every(Boolean));
+  useEffect(() => { setPicks([]); setSel(0); setAdded(false); setPText(""); setPExtra(""); setPFont(PERSONALIZE_FONTS[0].id); }, [id]);
+  const pickedColors = !colorCount || (picks.length === colorCount && picks.every(Boolean));
+  const persComplete = !pers || (pText.trim().length > 0 && (!pers.extraLabel || pExtra.trim().length > 0));
+  const pickedAll = pickedColors && persComplete;
   const setPick = (slot, colorId) =>
     setPicks((p) => {
       const n = [...p];
@@ -38,7 +46,11 @@ export default function ProductPage() {
       const saved = localStorage.getItem("sw-cart");
       const cart = saved ? JSON.parse(saved) : {};
       if (!pickedAll) return;
-      const key = cartKey(product.id, colorCount ? picks.slice(0, colorCount) : []);
+      const key = cartKey(
+        product.id,
+        colorCount ? picks.slice(0, colorCount) : [],
+        pers ? { text: pText.trim(), font: pFont, extra: pExtra.trim() } : {}
+      );
       cart[key] = (cart[key] || 0) + 1;
       localStorage.setItem("sw-cart", JSON.stringify(cart));
       setAdded(true);
@@ -79,7 +91,21 @@ export default function ProductPage() {
         </div>
 
         <div className="pp-grid">
-          {media.length ? (
+          {pers ? (
+            <div style={{ position: "relative" }}>
+              <PersonalizePreview
+                product={product}
+                colorCss={(product.colors || []).find((c) => c.id === picks[0])?.css || "#8a8d91"}
+                text={pText}
+                fontId={pFont}
+              />
+              {!product.inStock && (
+                <span style={{ position: "absolute", top: 16, left: 16, background: "#7A7A82", color: "#fff", fontSize: 12, fontWeight: 700, padding: "6px 12px", borderRadius: 999 }}>
+                  {product.comingSoon ? "Bald verfügbar" : "Ausverkauft"}
+                </span>
+              )}
+            </div>
+          ) : media.length ? (
             <div>
               <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", aspectRatio: "1 / 1", background: "#F7F4EF", border: "1px solid #E4DFD6" }}>
                 {cur.type === "video" ? (
@@ -147,6 +173,52 @@ export default function ProductPage() {
               {product.description}
             </p>
 
+            {pers && (
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 600, margin: "0 0 8px" }}>
+                  {pers.label} <span style={{ fontWeight: 400, color: "#7A7A82" }}>(max. {pers.maxLength} Zeichen)</span>
+                </label>
+                <input
+                  value={pText}
+                  maxLength={pers.maxLength}
+                  onChange={(e) => { setPText(e.target.value.replace(/[|]/g, "")); setAdded(false); }}
+                  placeholder="Hier eintippen …"
+                  style={{ width: "100%", border: "1px solid #D9D2C8", borderRadius: 10, padding: "11px 14px", fontSize: 15, outline: "none", background: "#fff", color: "#2B2E4A", fontFamily: "'Inter', sans-serif" }}
+                />
+                <p style={{ fontSize: 13, fontWeight: 600, margin: "14px 0 8px" }}>Schrift</p>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {PERSONALIZE_FONTS.map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      aria-pressed={pFont === f.id}
+                      onClick={() => { setPFont(f.id); setAdded(false); }}
+                      style={{
+                        fontFamily: f.css, fontWeight: f.weight, fontSize: 14, padding: "8px 14px", borderRadius: 999, cursor: "pointer",
+                        background: pFont === f.id ? "#2B2E4A" : "#fff", color: pFont === f.id ? "#fff" : "#2B2E4A",
+                        border: pFont === f.id ? "1px solid #2B2E4A" : "1px solid #D9D2C8",
+                      }}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+                {pers.extraLabel && (
+                  <>
+                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, margin: "14px 0 8px" }}>{pers.extraLabel}</label>
+                    <input
+                      value={pExtra}
+                      maxLength={20}
+                      inputMode="decimal"
+                      onChange={(e) => { setPExtra(e.target.value.replace(/[|]/g, "")); setAdded(false); }}
+                      placeholder={pers.extraPlaceholder || ""}
+                      style={{ width: 160, border: "1px solid #D9D2C8", borderRadius: 10, padding: "10px 14px", fontSize: 14.5, outline: "none", background: "#fff", color: "#2B2E4A", fontFamily: "'Inter', sans-serif" }}
+                    />
+                  </>
+                )}
+              </div>
+            )}
+
             {product.colors && (
               <div style={{ marginBottom: 22 }}>
                 {Array.from({ length: colorCount }).map((_, slot) => {
@@ -209,7 +281,7 @@ export default function ProductPage() {
                 <button
                   onClick={addToCart}
                   disabled={!pickedAll}
-                  title={pickedAll ? "" : "Bitte zuerst eine Farbe wählen"}
+                  title={pickedAll ? "" : pickedColors ? "Bitte zuerst den Wunschtext eingeben" : "Bitte zuerst eine Farbe wählen"}
                   style={{
                     opacity: pickedAll ? 1 : 0.5,
                     display: "inline-flex", alignItems: "center", gap: 8, background: "linear-gradient(135deg, #C97A4E, #82431F)",
@@ -221,11 +293,11 @@ export default function ProductPage() {
                 </button>
               )
             ) : (
-              <p style={{ color: "#7A7A82", fontSize: 14 }}>
-                {product.comingSoon
-                  ? "Wir arbeiten gerade daran – bald kannst du es hier bestellen."
-                  : "Aktuell leider ausverkauft – schau bald wieder vorbei."}
-              </p>
+              product.comingSoon ? (
+                <NotifyMe product={product} />
+              ) : (
+                <p style={{ color: "#7A7A82", fontSize: 14 }}>Aktuell leider ausverkauft – schau bald wieder vorbei.</p>
+              )
             )}
           </div>
         </div>

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { supabase } from "./supabaseClient";
 import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Loader2, Trash2, Sun, Moon, Truck, RotateCcw, ShieldCheck, ChevronDown, Tag, PenTool, Sparkles, Package, Mail, Star } from "lucide-react";
-import { CATEGORIES, MATERIALS, PRODUCTS, TAG_LABELS, DISCOUNT_CODES, FAQS, SHOP_OPEN, SHIPPING_RATES, formatPrice, parseCartKey, colorLabel } from "./shopData";
+import { CATEGORIES, MATERIALS, PRODUCTS, TAG_LABELS, DISCOUNT_CODES, FAQS, SHOP_OPEN, SHIPPING_RATES, formatPrice, parseCartKey, colorLabel, personalizeLabel } from "./shopData";
 import ProductIllustration from "./ProductIllustration";
 import { EMAILJS_SERVICE_ID, EMAILJS_PUBLIC_KEY, SHOP_OWNER_EMAIL, EMAILJS_ORDER_TEMPLATE_ID } from "./emailConfig";
 
@@ -192,17 +192,21 @@ export default function Shop() {
     return Object.entries(cart)
       .filter(([, qty]) => qty > 0)
       .map(([key, qty]) => {
-        const { id, colors } = parseCartKey(key);
-        return { key, colors, product: PRODUCTS.find((p) => p.id === id), qty };
+        const parsed = parseCartKey(key);
+        return { key, ...parsed, product: PRODUCTS.find((p) => p.id === parsed.id), qty };
       })
       // Nicht mehr vorhandene oder nicht bestellbare Produkte aus alten Warenkörben ignorieren,
-      // ebenso Farbprodukte ohne (vollständige) Farbwahl
-      .filter(({ product, colors }) => product && product.inStock && (!product.colorCount || colors.length === product.colorCount))
-      .map(({ key, colors, product, qty }) => ({
+      // ebenso Farbprodukte ohne (vollständige) Farbwahl und personalisierte Produkte ohne Wunschtext
+      .filter(({ product, colors, text }) =>
+        product && product.inStock &&
+        (!product.colorCount || colors.length === product.colorCount) &&
+        (!product.personalize || text))
+      .map(({ key, colors, text, font, extra, product, qty }) => ({
         ...product,
         key,
         qty,
         colorText: colors.length ? colors.map((c) => colorLabel(product, c)).join(" + ") : "",
+        personalText: personalizeLabel(product, { text, font, extra }),
       }));
   }, [cart]);
 
@@ -261,12 +265,16 @@ export default function Shop() {
     setSendError("");
     setSending(true);
     const orderDetails = cartItems
-      .map((i) => `${i.qty}x ${i.name}${i.colorText ? ` – Farbe: ${i.colorText}` : ""} (${formatPrice(i.price)} pro Stück) = ${formatPrice(i.qty * i.price)}`)
+      .map((i) => `${i.qty}x ${i.name}${i.colorText ? ` – Farbe: ${i.colorText}` : ""}${i.personalText ? ` – ${i.personalText}` : ""} (${formatPrice(i.price)} pro Stück) = ${formatPrice(i.qty * i.price)}`)
       .join("\n") +
       (discountApplied ? `\nRabatt (${discountApplied.code}): -${formatPrice(subtotal - discountedTotal)}` : "") +
       `\nVersand nach ${shippingRate.label}: ${shippingCost > 0 ? formatPrice(shippingCost) : "gratis"}` +
       (shippingInfo ? `\n\nLieferadresse:\n${shippingInfo}` : "");
-    const itemsForDb = cartItems.map((i) => ({ name: i.colorText ? `${i.name} (${i.colorText})` : i.name, qty: i.qty, price: i.price }));
+    const itemsForDb = cartItems.map((i) => ({
+      name: [i.name, i.colorText && `(${i.colorText})`, i.personalText && `– ${i.personalText}`].filter(Boolean).join(" "),
+      qty: i.qty,
+      price: i.price,
+    }));
     if (shippingCost > 0) itemsForDb.push({ name: `Versand ${shippingRate.label}`, qty: 1, price: shippingCost });
     try {
       // IDs im Browser erzeugen – Besucher dürfen Bestellungen anlegen, aber (zu Recht) nicht auslesen
@@ -928,9 +936,9 @@ export default function Shop() {
                           {formatPrice(p.price)}
                         </span>
                       </span>
-                      {p.inStock && p.colors ? (
+                      {p.inStock && (p.colors || p.personalize) ? (
                         <Link to={`/produkt/${p.id}`} className="sw-add-btn" style={{ textDecoration: "none" }}>
-                          Farbe wählen
+                          {p.personalize ? "Gestalten" : "Farbe wählen"}
                         </Link>
                       ) : p.inStock ? (
                         <button className="sw-add-btn" onClick={() => addToCart(p.id)}>
@@ -1219,6 +1227,9 @@ export default function Shop() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: 13.5, fontWeight: 500, margin: 0, lineHeight: 1.35 }}>{item.name}</p>
+                  {item.personalText && (
+                    <p style={{ fontSize: 12, color: "var(--muted)", margin: "2px 0 0" }}>{item.personalText}</p>
+                  )}
                   {item.colorText && (
                     <p style={{ fontSize: 12, color: "var(--muted)", margin: "2px 0 0" }}>Farbe: {item.colorText}</p>
                   )}

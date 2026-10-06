@@ -20,11 +20,47 @@ export const FIDGET_COLORS = [
   { id: "regenbogen", label: "Regenbogen", css: "conic-gradient(#e53935, #fb8c00, #fdd835, #43a047, #1e88e5, #8e24aa, #e53935)" },
 ];
 
-// Warenkorb-Schlüssel: Produkt-ID plus gewählte Farben, z.B. "p23|schwarz" oder "p25|rot|gelb"
-export const cartKey = (id, colors = []) => [id, ...colors].join("|");
+// Einfarbige Auswahl für personalisierte Produkte (ohne Verläufe)
+export const SOLID_COLORS = FIDGET_COLORS.filter((c) => !c.css.includes("gradient"));
+
+// Schriftarten für die Live-Vorschau personalisierter Produkte
+export const PERSONALIZE_FONTS = [
+  { id: "modern", label: "Modern", css: "'Space Grotesk', sans-serif", weight: 700, width: 0.6 },
+  { id: "klar", label: "Klar", css: "'Inter', sans-serif", weight: 600, width: 0.58 },
+  { id: "technisch", label: "Technisch", css: "'JetBrains Mono', monospace", weight: 500, width: 0.62 },
+];
+
+// Warenkorb-Schlüssel: Produkt-ID plus gewählte Farben, z.B. "p23|schwarz" oder "p25|rot|gelb".
+// Personalisierte Produkte hängen Wunschtext (t:), Schrift (f:) und Zusatzangabe (x:) an, z.B. "p15|rot|t:Anna|f:modern".
+export const cartKey = (id, colors = [], opts = {}) => {
+  const parts = [id, ...colors];
+  if (opts.text) parts.push("t:" + encodeURIComponent(opts.text));
+  if (opts.font) parts.push("f:" + opts.font);
+  if (opts.extra) parts.push("x:" + encodeURIComponent(opts.extra));
+  return parts.join("|");
+};
 export const parseCartKey = (key) => {
-  const [id, ...colors] = String(key).split("|");
-  return { id, colors };
+  const [id, ...rest] = String(key).split("|");
+  const colors = [];
+  let text = "", font = "", extra = "";
+  for (const part of rest) {
+    if (part.startsWith("t:")) text = safeDecode(part.slice(2));
+    else if (part.startsWith("f:")) font = part.slice(2);
+    else if (part.startsWith("x:")) extra = safeDecode(part.slice(2));
+    else colors.push(part);
+  }
+  return { id, colors, text, font, extra };
+};
+function safeDecode(v) {
+  try { return decodeURIComponent(v); } catch { return v; }
+}
+export const personalizeLabel = (product, { text, font, extra }) => {
+  if (!product?.personalize || !text) return "";
+  const f = PERSONALIZE_FONTS.find((x) => x.id === font);
+  const bits = [`„${text}“`];
+  if (f) bits.push(`Schrift ${f.label}`);
+  if (extra && product.personalize.extraLabel) bits.push(`${product.personalize.extraLabel}: ${extra}`);
+  return bits.join(" · ");
 };
 export const colorLabel = (product, colorId) =>
   (product?.colors || []).find((c) => c.id === colorId)?.label || colorId;
@@ -56,14 +92,18 @@ export const PRODUCTS = [
   { id: "p9", name: "Beweglicher Drache (Fidget)", category: "spielzeug", material: "TPU", price: 19.0, hue: "#1D9E75", tag: "beliebt", inStock: false, comingSoon: true, description: "Beweglich gedruckter Fidget-Drache, ganz ohne Zusammenbau – jedes Gelenk wird direkt mitgedruckt." },
   { id: "p11", name: "Schachfiguren-Set", category: "deko", material: "PLA", price: 34.0, hue: "#FF6A13", tag: "neu", inStock: false, comingSoon: true, description: "Komplettes Schachfiguren-Set in modernem, geometrischem Design, passend für Standard-Schachbretter." },
   { id: "p12", name: "Handy-Ständer, klappbar", category: "technik", material: "PETG", price: 9.0, hue: "#2F6FED", inStock: false, comingSoon: true, description: "Klappbarer Handyständer für den Schreibtisch, passt zusammengeklappt in jede Tasche." },
-  { id: "p13", name: "Stiftehalter mit Namen", category: "individuell", material: "PLA", price: 7.5, hue: "#1D9E75", inStock: false, comingSoon: true, description: "Sechseckiger Stiftehalter für den Schreibtisch – auf Wunsch mit deinem Namen oder einem kurzen Text. Wunschtext bitte bei der Bestellung angeben." },
+  { id: "p13", name: "Stiftehalter mit Namen", category: "individuell", material: "PLA", price: 7.5, hue: "#1D9E75", inStock: false, comingSoon: true, description: "Sechseckiger Stiftehalter für den Schreibtisch – mit deinem Namen oder einem kurzen Text. Tipp deinen Wunschtext ein und sieh sofort, wie er aussieht.",
+    colors: SOLID_COLORS, colorCount: 1, personalize: { type: "penholder", label: "Wunschtext", maxLength: 12 } },
   { id: "p14", name: "Seifenschale mit Ablauf", category: "deko", material: "PETG", price: 6.5, hue: "#2F6FED", inStock: false, comingSoon: true, description: "Ovale Seifenschale mit integrierten Ablauflöchern, damit die Seife nicht in der Nässe liegt." },
-  { id: "p15", name: "Schlüsselanhänger, personalisiert", category: "individuell", material: "PLA", price: 4.5, hue: "#D4537E", inStock: false, comingSoon: true, description: "Runder Schlüsselanhänger mit deinem Wunschnamen oder Kürzel. Wunschtext bitte bei der Bestellung angeben." },
+  { id: "p15", name: "Schlüsselanhänger, personalisiert", category: "individuell", material: "PLA", price: 4.5, hue: "#D4537E", inStock: false, comingSoon: true, description: "Runder Schlüsselanhänger mit deinem Wunschnamen oder Kürzel. Tipp den Namen ein und sieh sofort, wie er aussieht.",
+    colors: SOLID_COLORS, colorCount: 1, personalize: { type: "keychain", label: "Name oder Kürzel", maxLength: 10 } },
   { id: "p16", name: "Blumentopf mit integrierter Untertasse", category: "deko", material: "PETG", price: 16.0, hue: "#1D9E75", tag: "neu", inStock: false, comingSoon: true, description: "Geometrischer Blumentopf mit passgenau integrierter Untertasse – kein separates Tablett nötig, sauberer Look fürs Fensterbrett. Wasserfest durch PETG." },
   { id: "p17", name: "Spiral-Vase, Vase-Mode", category: "deko", material: "PLA", price: 13.5, hue: "#FF6A13", tag: "beliebt", inStock: false, comingSoon: true, description: "Im sogenannten „Vase Mode” gedruckt – eine einzige durchgehende Wand ohne Absätze, wirkt dadurch fast wie gedrehte Keramik. Für trockene Deko, nicht wasserdicht." },
   { id: "p18", name: "Kopfhörer-Ständer, geometrisch", category: "technik", material: "PLA", price: 14.0, hue: "#2F6FED", inStock: false, comingSoon: true, description: "Facettierter Kopfhörer-Ständer für den Schreibtisch, standfest durch breiten Sockel. Passt für die meisten Over-Ear-Kopfhörer." },
-  { id: "p19", name: "Napf-Untersteller mit Tiernamen", category: "individuell", material: "PETG", price: 19.0, hue: "#D4537E", tag: "neu", inStock: false, comingSoon: true, description: "Untersteller für Edelstahlnäpfe, mit dem Namen deines Tieres vorne eingelassen. Bitte bei der Bestellung den gewünschten Namen sowie den Durchmesser deines Napfs angeben." },
-  { id: "p20", name: "Namensschild, personalisiert", category: "individuell", material: "PLA", price: 9.0, hue: "#FF6A13", inStock: false, comingSoon: true, description: "Personalisiertes Namensschild – für Tür, Regal oder als Geschenk. Wunschname bitte bei der Bestellung angeben, optional mit LED-Hinterleuchtung gegen Aufpreis (einfach anfragen)." },
+  { id: "p19", name: "Napf-Untersteller mit Tiernamen", category: "individuell", material: "PETG", price: 19.0, hue: "#D4537E", tag: "neu", inStock: false, comingSoon: true, description: "Untersteller für Edelstahlnäpfe, mit dem Namen deines Tieres vorne eingelassen. Tipp den Namen ein, sieh dir die Vorschau an und gib den Durchmesser deines Napfs an.",
+    colors: SOLID_COLORS, colorCount: 1, personalize: { type: "bowl", label: "Name deines Tieres", maxLength: 12, extraLabel: "Napf-Ø oben (cm)", extraPlaceholder: "z. B. 16" } },
+  { id: "p20", name: "Namensschild, personalisiert", category: "individuell", material: "PLA", price: 9.0, hue: "#FF6A13", inStock: false, comingSoon: true, description: "Personalisiertes Namensschild – für Tür, Regal oder als Geschenk. Tipp deinen Wunschnamen ein und sieh sofort, wie er aussieht. Optional mit LED-Hinterleuchtung gegen Aufpreis (einfach anfragen).",
+    colors: SOLID_COLORS, colorCount: 1, personalize: { type: "nameplate", label: "Wunschname", maxLength: 16 } },
   { id: "p22", name: "Infinity-Würfel (Fidget)", category: "spielzeug", material: "PLA", price: 12.0, hue: "#FF6A13", tag: "neu", inStock: false, comingSoon: true, description: "Acht Würfel, verbunden durch mitgedruckte Gelenke – lässt sich endlos in sich selbst falten. Der perfekte Fidget für den Schreibtisch. Enthält Kleinteile, nicht für Kinder unter 3 Jahren geeignet." },
   { id: "p23", name: "Zahnrad-Fidget", category: "spielzeug", material: "PLA", price: 9.9, hue: "#2F6FED", inStock: false, comingSoon: true,
     colors: FIDGET_COLORS, colorCount: 1,

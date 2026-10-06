@@ -1,0 +1,125 @@
+import React from "react";
+import { PERSONALIZE_FONTS } from "./shopData";
+
+// Live-Vorschau für personalisierte Produkte (vereinfachte Darstellung als SVG)
+function shade(hex, f) {
+  const n = parseInt(hex.replace("#", ""), 16);
+  const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.max(0, Math.min(255, Math.round(f < 0 ? v * (1 + f) : v + (255 - v) * f))));
+  return "#" + c.map((v) => v.toString(16).padStart(2, "0")).join("");
+}
+function isLight(hex) {
+  const n = parseInt(hex.replace("#", ""), 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  return 0.299 * r + 0.587 * g + 0.114 * b > 150;
+}
+
+function FitText({ text, x, y, maxWidth, maxSize, font, fill, rotate }) {
+  const len = Math.max(1, text.length);
+  const size = Math.min(maxSize, maxWidth / (len * font.width));
+  return (
+    <text
+      x={x} y={y} textAnchor="middle" dominantBaseline="central"
+      fontFamily={font.css} fontWeight={font.weight} fontSize={size} fill={fill}
+      transform={rotate ? `rotate(${rotate} ${x} ${y})` : undefined}
+      style={{ letterSpacing: font.id === "technisch" ? 0 : "0.01em" }}
+    >
+      {text}
+    </text>
+  );
+}
+
+export default function PersonalizePreview({ product, colorCss, text, fontId }) {
+  const type = product.personalize?.type;
+  const base = colorCss && colorCss.startsWith("#") ? colorCss : "#8a8d91";
+  const font = PERSONALIZE_FONTS.find((f) => f.id === fontId) || PERSONALIZE_FONTS[0];
+  const shown = text?.trim() || (type === "bowl" ? "Mufasa" : type === "keychain" ? "Anna" : "Dein Name");
+  const placeholder = !text?.trim();
+  const dark = shade(base, -0.35);
+  const darker = shade(base, -0.55);
+  const light = shade(base, 0.25);
+  // eingelassener Text: dunkler auf hellen Farben, heller auf dunklen
+  const ink = isLight(base) ? shade(base, -0.6) : shade(base, 0.45);
+  const textFill = placeholder ? (isLight(base) ? "rgba(0,0,0,0.28)" : "rgba(255,255,255,0.35)") : ink;
+
+  return (
+    <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", aspectRatio: "1 / 1", background: "#EFE9E1", border: "1px solid #E4DFD6" }}>
+      <svg viewBox="0 0 400 400" width="100%" height="100%" role="img" aria-label={`Vorschau: ${product.name} mit „${shown}“`}>
+        <defs>
+          <pattern id="layers" width="4" height="4" patternUnits="userSpaceOnUse">
+            <rect width="4" height="3.2" fill="transparent" />
+            <rect y="3.2" width="4" height="0.8" fill="rgba(0,0,0,0.06)" />
+          </pattern>
+          <radialGradient id="floor" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="rgba(0,0,0,0.22)" />
+            <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+          </radialGradient>
+        </defs>
+
+        {type === "keychain" && (
+          <g>
+            <ellipse cx="200" cy="335" rx="120" ry="16" fill="url(#floor)" />
+            <circle cx="200" cy="72" r="34" fill="none" stroke="#B8BCC2" strokeWidth="7" />
+            <circle cx="200" cy="72" r="34" fill="none" stroke="#E6E8EB" strokeWidth="2" />
+            <circle cx="206" cy="212" r="118" fill={darker} />
+            <circle cx="200" cy="206" r="118" fill={base} />
+            <circle cx="200" cy="206" r="118" fill="url(#layers)" />
+            <circle cx="200" cy="206" r="100" fill="none" stroke={dark} strokeWidth="3" opacity="0.5" />
+            <circle cx="200" cy="116" r="13" fill="#EFE9E1" stroke={dark} strokeWidth="3" />
+            <FitText text={shown} x={200} y={216} maxWidth={170} maxSize={64} font={font} fill={textFill} />
+          </g>
+        )}
+
+        {type === "nameplate" && (
+          <g>
+            <ellipse cx="200" cy="300" rx="175" ry="16" fill="url(#floor)" />
+            <rect x="32" y="138" width="344" height="140" rx="22" fill={darker} />
+            <rect x="24" y="128" width="344" height="140" rx="22" fill={base} />
+            <rect x="24" y="128" width="344" height="140" rx="22" fill="url(#layers)" />
+            <rect x="38" y="142" width="316" height="112" rx="14" fill="none" stroke={dark} strokeWidth="3" opacity="0.45" />
+            <circle cx="56" cy="198" r="8" fill="#EFE9E1" stroke={dark} strokeWidth="2.5" />
+            <circle cx="336" cy="198" r="8" fill="#EFE9E1" stroke={dark} strokeWidth="2.5" />
+            <FitText text={shown} x={196} y={200} maxWidth={240} maxSize={66} font={font} fill={textFill} />
+          </g>
+        )}
+
+        {type === "bowl" && (
+          <g>
+            <ellipse cx="200" cy="340" rx="160" ry="18" fill="url(#floor)" />
+            {/* Napf */}
+            <ellipse cx="200" cy="112" rx="132" ry="30" fill="#C9CDD2" />
+            <ellipse cx="200" cy="112" rx="118" ry="24" fill="#9EA4AB" />
+            <ellipse cx="200" cy="116" rx="96" ry="17" fill="#B7BCC2" />
+            {/* Untersteller */}
+            <path d={`M 76 132 L 324 132 L 300 322 L 100 322 Z`} fill={base} />
+            <path d={`M 76 132 L 324 132 L 300 322 L 100 322 Z`} fill="url(#layers)" />
+            <path d={`M 324 132 L 340 140 L 314 326 L 300 322 Z`} fill={dark} />
+            <rect x="70" y="124" width="260" height="14" rx="4" fill={light} />
+            <path d={`M 108 186 L 292 186 L 282 280 L 118 280 Z`} fill={dark} opacity="0.18" />
+            <FitText text={shown} x={200} y={234} maxWidth={160} maxSize={52} font={font} fill={textFill} />
+          </g>
+        )}
+
+        {type === "penholder" && (
+          <g>
+            <ellipse cx="200" cy="340" rx="130" ry="16" fill="url(#floor)" />
+            {/* Stifte */}
+            <rect x="150" y="40" width="16" height="130" rx="3" fill="#2F6FED" transform="rotate(-8 158 105)" />
+            <rect x="196" y="28" width="16" height="140" rx="3" fill="#F5CF2D" />
+            <rect x="240" y="44" width="16" height="125" rx="3" fill="#D23A32" transform="rotate(9 248 106)" />
+            <polygon points="196,28 212,28 204,12" fill="#3A3A3A" />
+            {/* Sechseck-Körper: Front + zwei Seiten */}
+            <polygon points="120,120 160,104 240,104 280,120 240,136 160,136" fill={darker} />
+            <polygon points="120,120 160,136 160,330 120,312" fill={dark} />
+            <polygon points="240,136 280,120 280,312 240,330" fill={dark} />
+            <polygon points="160,136 240,136 240,330 160,330" fill={base} />
+            <polygon points="160,136 240,136 240,330 160,330" fill="url(#layers)" />
+            <FitText text={shown} x={200} y={233} maxWidth={170} maxSize={46} font={font} fill={textFill} rotate={-90} />
+          </g>
+        )}
+      </svg>
+      <span style={{ position: "absolute", left: 14, bottom: 12, fontSize: 11.5, color: "#7A7A82", background: "rgba(247,244,239,0.85)", borderRadius: 999, padding: "4px 10px" }}>
+        Vorschau – vereinfachte Darstellung
+      </span>
+    </div>
+  );
+}
