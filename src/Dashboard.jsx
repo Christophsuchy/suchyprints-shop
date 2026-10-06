@@ -128,6 +128,14 @@ export default function Dashboard() {
                     </p>
                   ))}
                 </div>
+                {o.shipping_address && (
+                  <p style={{ fontSize: 13, margin: "10px 0 0", color: "#374151", whiteSpace: "pre-line", lineHeight: 1.5 }}>
+                    <strong>Lieferadresse:</strong>{"\n"}{o.shipping_address}
+                  </p>
+                )}
+                {o.paypal_transaction_id && (
+                  <p style={{ fontSize: 12, margin: "6px 0 0", color: "#6B7280" }}>PayPal: {o.paypal_transaction_id}</p>
+                )}
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, fontSize: 13 }}>
                   <span style={{ color: "#6B7280" }}>{new Date(o.created_at).toLocaleString("de-AT")}</span>
                   <span style={{ fontWeight: 600 }}>{formatPrice(o.total)}</span>

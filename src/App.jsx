@@ -9,6 +9,7 @@ import AGB from "./AGB";
 import Widerruf from "./Widerruf";
 import ProductPage from "./ProductPage";
 import Kontakt from "./Kontakt";
+import Bewertung from "./Bewertung";
 import CookieBanner from "./CookieBanner";
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/widerruf" element={<Widerruf />} />
         <Route path="/produkt/:id" element={<ProductPage />} />
         <Route path="/kontakt" element={<Kontakt />} />
+        <Route path="/bewertung/:token" element={<Bewertung />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <CookieBanner />

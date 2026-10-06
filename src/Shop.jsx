@@ -269,32 +269,32 @@ export default function Shop() {
     const itemsForDb = cartItems.map((i) => ({ name: i.colorText ? `${i.name} (${i.colorText})` : i.name, qty: i.qty, price: i.price }));
     if (shippingCost > 0) itemsForDb.push({ name: `Versand ${shippingRate.label}`, qty: 1, price: shippingCost });
     try {
-      const { data: insertedOrder, error: dbError } = await supabase
-        .from("orders")
-        .insert({
-          customer_name: customerName,
-          customer_email: customerEmail,
-          items: itemsForDb,
-          total: grandTotal,
-          payment_status: "bezahlt",
-          paypal_transaction_id: paypalTransactionId,
-        })
-        .select()
-        .single();
+      // IDs im Browser erzeugen – Besucher dürfen Bestellungen anlegen, aber (zu Recht) nicht auslesen
+      const orderId = crypto.randomUUID();
+      const reviewToken = crypto.randomUUID();
+      const { error: dbError } = await supabase.from("orders").insert({
+        id: orderId,
+        review_token: reviewToken,
+        customer_name: customerName,
+        customer_email: customerEmail,
+        items: itemsForDb,
+        total: grandTotal,
+        payment_status: "bezahlt",
+        paypal_transaction_id: paypalTransactionId,
+        shipping_address: shippingInfo || null,
+      });
       if (dbError) console.error("Bestellung konnte nicht im Dashboard gespeichert werden:", dbError);
 
       // Bestellbestätigung an den Kunden (über Brevo, Daten werden serverseitig aus Supabase geprüft)
-      if (insertedOrder?.id) {
+      if (!dbError) {
         fetch("/api/order-confirmation", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId: insertedOrder.id, transactionId: paypalTransactionId, shippingInfo }),
+          body: JSON.stringify({ orderId, transactionId: paypalTransactionId }),
         }).catch((e) => console.error("Bestellbestätigung konnte nicht gesendet werden:", e));
       }
 
-      const reviewLink = insertedOrder?.review_token
-        ? `https://suchyprints.at/bewertung/${insertedOrder.review_token}`
-        : "";
+      const reviewLink = !dbError ? `https://suchyprints.at/bewertung/${reviewToken}` : "";
 
       await emailjs.send(
         EMAILJS_SERVICE_ID,

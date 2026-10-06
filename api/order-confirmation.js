@@ -13,7 +13,8 @@ const esc = (v) =>
   String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const euro = (n) => Number(n || 0).toLocaleString("de-AT", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 
-function buildHtml(order, shippingInfo) {
+function buildHtml(order) {
+  const shippingInfo = order.shipping_address || "";
   const items = Array.isArray(order.items) ? order.items : [];
   const rows = items
     .map(
@@ -40,6 +41,7 @@ ${rows}
 </table>
 <p style="font-size:12px;color:#7A7A82;margin:8px 0 0;">Gemäß § 6 Abs. 1 Z 27 UStG wird keine Umsatzsteuer berechnet (Kleinunternehmerregelung).</p></td></tr>
 ${address}
+${order.review_token ? `<tr><td style="font-size:14px;line-height:1.6;padding-bottom:20px;">Wenn dein Paket angekommen ist, freuen wir uns sehr über deine ehrliche Meinung: <a href="https://suchyprints.at/bewertung/${esc(order.review_token)}" style="color:#A85A32;">Bestellung bewerten</a></td></tr>` : ""}
 <tr><td style="font-size:13px;line-height:1.6;color:#2B2E4A;padding-bottom:20px;">Es gelten unsere <a href="https://suchyprints.at/agb" style="color:#A85A32;">AGB</a>. Informationen zu deinem <a href="https://suchyprints.at/widerruf" style="color:#A85A32;">Widerrufsrecht</a> und das Muster-Widerrufsformular findest du auf unserer Website. Bei Fragen antworte einfach auf diese Mail.</td></tr>
 <tr><td style="font-size:12px;line-height:1.6;color:#9A9AA2;padding-top:20px;border-top:1px solid #EEE;">SuchyPrints · Christoph Suchy · Murgasse 3, 8121 Deutschfeistritz, Österreich<br><a href="https://suchyprints.at" style="color:#9A9AA2;">suchyprints.at</a> · christoph.suchy@suchyprints.at</td></tr>
 </table></td></tr></table></body></html>`;
@@ -63,14 +65,13 @@ export default async function handler(req, res) {
   }
   const orderId = String(body?.orderId || "").trim();
   const transactionId = String(body?.transactionId || "").trim();
-  const shippingInfo = String(body?.shippingInfo || "").slice(0, 400);
   if (!orderId || !transactionId || orderId.length > 64 || transactionId.length > 64) {
     return res.status(400).json({ error: "invalid_request" });
   }
 
   try {
     const q = new URLSearchParams({
-      select: "id,customer_name,customer_email,items,total,paypal_transaction_id,created_at",
+      select: "id,customer_name,customer_email,items,total,paypal_transaction_id,created_at,shipping_address,review_token",
       id: `eq.${orderId}`,
       paypal_transaction_id: `eq.${transactionId}`,
       limit: "1",
@@ -96,7 +97,7 @@ export default async function handler(req, res) {
         replyTo: SENDER,
         to: [{ email: order.customer_email, name: order.customer_name || undefined }],
         subject: "Deine Bestellung bei SuchyPrints",
-        htmlContent: buildHtml(order, shippingInfo),
+        htmlContent: buildHtml(order),
         tags: ["bestellbestaetigung"],
       }),
     });
