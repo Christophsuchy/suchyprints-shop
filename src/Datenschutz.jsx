@@ -38,19 +38,30 @@ export default function Datenschutz() {
           Zahlungen werden über PayPal abgewickelt. Dabei werden deine Zahlungsdaten direkt an PayPal (Europe) S.à r.l. et Cie, S.C.A. übermittelt und unterliegen deren Datenschutzbestimmungen. Wir selbst erhalten keine Kreditkarten- oder Kontodaten, lediglich die Bestätigung und Transaktionsnummer der Zahlung.
         </p>
 
-        <h2 style={h2}>4. Hosting</h2>
+        <h2 style={h2}>4. Newsletter</h2>
+        <p style={p}>
+          Wenn du dich für unseren Newsletter anmeldest, verarbeiten wir deine E-Mail-Adresse auf Grundlage deiner Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), um dich über den Shop-Start, neue Produkte und Aktionen zu informieren. Die Anmeldung erfolgt im Double-Opt-in-Verfahren: Du erhältst zuerst eine E-Mail mit einem Bestätigungslink, erst danach wirst du eingetragen. Dabei werden der Zeitpunkt der Anmeldung und der Bestätigung gespeichert, um die Einwilligung nachweisen zu können.
+        </p>
+        <p style={p}>
+          Für den Versand nutzen wir den Dienst Brevo (Sendinblue SAS, 106 boulevard Haussmann, 75008 Paris, Frankreich). Deine Daten werden auf Servern in der EU gespeichert. Mit Brevo besteht ein Auftragsverarbeitungsvertrag.
+        </p>
+        <p style={p}>
+          Du kannst deine Einwilligung jederzeit widerrufen – über den Abmeldelink in jeder Newsletter-Mail oder per E-Mail an uns. Deine Adresse wird dann aus der Liste gelöscht.
+        </p>
+
+        <h2 style={h2}>5. Hosting</h2>
         <p style={p}>
           Diese Website wird über Vercel Inc. gehostet. Beim Aufruf der Seite werden technisch notwendige Daten (z. B. IP-Adresse, Zugriffszeitpunkt) durch den Hosting-Anbieter verarbeitet, um die Seite auszuliefern.
         </p>
 
-        <h2 style={h2}>5. Deine Rechte</h2>
+        <h2 style={h2}>6. Deine Rechte</h2>
         <p style={p}>
           Du hast jederzeit das Recht auf Auskunft, Berichtigung, Löschung oder Einschränkung der Verarbeitung deiner Daten sowie ein Beschwerderecht bei der österreichischen Datenschutzbehörde. Wende dich dazu einfach an die oben genannte E-Mail-Adresse.
         </p>
 
-        <h2 style={h2}>6. Speicherdauer</h2>
+        <h2 style={h2}>7. Speicherdauer</h2>
         <p style={p}>
-          Bestelldaten werden so lange gespeichert, wie es gesetzliche Aufbewahrungspflichten (insb. steuerrechtlich) vorschreiben, danach werden sie gelöscht.
+          Bestelldaten werden so lange gespeichert, wie es gesetzliche Aufbewahrungspflichten (insb. steuerrechtlich) vorschreiben, danach werden sie gelöscht. Newsletter-Daten speichern wir, bis du dich abmeldest.
         </p>
       </div>
     </div>

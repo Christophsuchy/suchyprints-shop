@@ -92,6 +92,8 @@ export default function Shop() {
   const [openFaq, setOpenFaq] = useState(null);
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterStatus, setNewsletterStatus] = useState(null);
+  const [newsletterConsent, setNewsletterConsent] = useState(false);
+  const [newsletterHoneypot, setNewsletterHoneypot] = useState("");
   const [reviews, setReviews] = useState([]);
   const loaded = useRef(false);
 
@@ -120,6 +122,14 @@ export default function Shop() {
       .then(({ data }) => {
         if (data) setReviews(data);
       });
+    try {
+      if (new URLSearchParams(window.location.search).get("newsletter") === "bestaetigt") {
+        setNewsletterStatus("confirmed");
+        window.history.replaceState(null, "", window.location.pathname);
+      }
+    } catch (e) {
+      // URL nicht lesbar
+    }
     const t = setTimeout(() => setHeroReady(true), 50);
     return () => clearTimeout(t);
   }, []);
@@ -212,13 +222,22 @@ export default function Shop() {
 
   const subscribeNewsletter = async (e) => {
     e.preventDefault();
-    if (!newsletterEmail.trim()) return;
+    if (!newsletterEmail.trim() || !newsletterConsent) return;
     setNewsletterStatus("sending");
     try {
-      const { error } = await supabase.from("newsletter_subscribers").insert({ email: newsletterEmail.trim() });
-      if (error) throw error;
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: newsletterEmail.trim(), website: newsletterHoneypot }),
+      });
+      if (res.status === 400) {
+        setNewsletterStatus("invalid");
+        return;
+      }
+      if (!res.ok) throw new Error("newsletter " + res.status);
       setNewsletterStatus("success");
       setNewsletterEmail("");
+      setNewsletterConsent(false);
     } catch (err) {
       setNewsletterStatus("error");
     }
@@ -998,35 +1017,70 @@ export default function Shop() {
         </section>
 
         {/* Newsletter */}
-        <section style={{ maxWidth: 1080, margin: "0 auto", padding: "0 24px 56px" }}>
+        <section id="newsletter" style={{ maxWidth: 1080, margin: "0 auto", padding: "0 24px 56px" }}>
           <div style={{ background: "linear-gradient(135deg, var(--accent-soft), var(--accent-dark))", borderRadius: 18, padding: "36px 28px", textAlign: "center" }}>
             <Mail size={26} color="#fff" style={{ marginBottom: 12 }} />
             <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20, color: "#fff", margin: "0 0 6px" }}>
-              Nichts verpassen
+              {SHOP_OPEN ? "Nichts verpassen" : "Sei dabei, wenn der Shop öffnet"}
             </p>
             <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 13.5, margin: "0 0 20px" }}>
-              Neue Produkte und Aktionen direkt per Mail – kein Spam, versprochen.
+              {SHOP_OPEN
+                ? "Neue Produkte und Aktionen direkt per Mail – kein Spam, versprochen."
+                : "Trag dich ein und erfahre als Erste:r, wenn es losgeht – plus neue Produkte und Aktionen. Kein Spam, versprochen."}
             </p>
-            {newsletterStatus === "success" ? (
-              <p style={{ color: "#fff", fontWeight: 500, fontSize: 14 }}>✓ Danke fürs Anmelden!</p>
+            {newsletterStatus === "confirmed" ? (
+              <p style={{ color: "#fff", fontWeight: 500, fontSize: 14 }}>✓ Anmeldung bestätigt – schön, dass du dabei bist!</p>
+            ) : newsletterStatus === "success" ? (
+              <p style={{ color: "#fff", fontWeight: 500, fontSize: 14, maxWidth: 420, margin: "0 auto", lineHeight: 1.5 }}>
+                ✓ Fast geschafft! Wir haben dir eine E-Mail geschickt – bitte klick dort auf den Bestätigungslink.
+              </p>
             ) : (
-              <form onSubmit={subscribeNewsletter} style={{ display: "flex", gap: 8, maxWidth: 380, margin: "0 auto", flexWrap: "wrap", justifyContent: "center" }}>
-                <input
-                  type="email"
-                  required
-                  placeholder="Deine E-Mail-Adresse"
-                  value={newsletterEmail}
-                  onChange={(e) => setNewsletterEmail(e.target.value)}
-                  style={{ flex: 1, minWidth: 200, border: "none", borderRadius: 999, padding: "11px 16px", fontSize: 13.5, fontFamily: "var(--font-body)", outline: "none" }}
-                />
-                <button
-                  type="submit"
-                  disabled={newsletterStatus === "sending"}
-                  style={{ background: "#fff", color: "var(--accent-dark)", border: "none", borderRadius: 999, padding: "11px 22px", fontWeight: 600, fontSize: 13.5, cursor: "pointer" }}
-                >
-                  {newsletterStatus === "sending" ? "…" : "Anmelden"}
-                </button>
+              <form onSubmit={subscribeNewsletter} style={{ maxWidth: 420, margin: "0 auto" }}>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+                  <input
+                    type="email"
+                    required
+                    aria-label="E-Mail-Adresse"
+                    placeholder="Deine E-Mail-Adresse"
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    style={{ flex: 1, minWidth: 200, border: "none", borderRadius: 999, padding: "11px 16px", fontSize: 13.5, fontFamily: "var(--font-body)", outline: "none" }}
+                  />
+                  <input
+                    type="text"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                    value={newsletterHoneypot}
+                    onChange={(e) => setNewsletterHoneypot(e.target.value)}
+                    style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+                  />
+                  <button
+                    type="submit"
+                    disabled={newsletterStatus === "sending" || !newsletterConsent}
+                    style={{ background: "#fff", color: "var(--accent-dark)", border: "none", borderRadius: 999, padding: "11px 22px", fontWeight: 600, fontSize: 13.5, cursor: newsletterConsent ? "pointer" : "not-allowed", opacity: newsletterConsent ? 1 : 0.7 }}
+                  >
+                    {newsletterStatus === "sending" ? <Loader2 size={15} className="sw-spin" /> : "Anmelden"}
+                  </button>
+                </div>
+                <label style={{ display: "flex", gap: 8, alignItems: "flex-start", textAlign: "left", marginTop: 14, color: "rgba(255,255,255,0.9)", fontSize: 12, lineHeight: 1.5, cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    required
+                    checked={newsletterConsent}
+                    onChange={(e) => setNewsletterConsent(e.target.checked)}
+                    style={{ marginTop: 2, accentColor: "#fff", flexShrink: 0 }}
+                  />
+                  <span>
+                    Ja, ich möchte den SuchyPrints-Newsletter per E-Mail erhalten. Abmeldung jederzeit über den Link in jeder Mail. Mehr in der{" "}
+                    <Link to="/datenschutz" style={{ color: "#fff", textDecoration: "underline" }}>Datenschutzerklärung</Link>.
+                  </span>
+                </label>
               </form>
+            )}
+            {newsletterStatus === "invalid" && (
+              <p style={{ color: "#fff", fontSize: 12.5, marginTop: 10 }}>Bitte prüf deine E-Mail-Adresse.</p>
             )}
             {newsletterStatus === "error" && (
               <p style={{ color: "#fff", fontSize: 12.5, marginTop: 10 }}>Da ist etwas schiefgelaufen. Bitte später erneut versuchen.</p>
