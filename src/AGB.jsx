@@ -29,7 +29,7 @@ export default function AGB() {
 
         <h2 style={h2}>3. Preise und Zahlung</h2>
         <p style={p}>
-          Alle angegebenen Preise verstehen sich in Euro. Gemäß § 6 Abs. 1 Z 27 UStG wird keine Umsatzsteuer berechnet (Kleinunternehmerregelung). Für den Versand innerhalb Österreichs fallen 4,90 € an; ab einem Bestellwert von 50 € (nach Abzug eventueller Rabatte) ist der Versand kostenlos. Die Versandkosten werden vor Abschluss der Bestellung im Warenkorb angezeigt. Die Zahlung erfolgt ausschließlich über PayPal. Der Kaufpreis ist mit Vertragsschluss fällig.
+          Alle angegebenen Preise verstehen sich in Euro. Gemäß § 6 Abs. 1 Z 27 UStG wird keine Umsatzsteuer berechnet (Kleinunternehmerregelung). Versandkosten: Österreich 4,90 € (kostenlos ab 50 € Bestellwert), Deutschland 12,90 € (kostenlos ab 80 € Bestellwert), jeweils nach Abzug eventueller Rabatte. Die Versandkosten werden vor Abschluss der Bestellung im Warenkorb angezeigt. Die Zahlung erfolgt ausschließlich über PayPal. Der Kaufpreis ist mit Vertragsschluss fällig.
         </p>
 
         <h2 style={h2}>4. Individuelle Anfertigungen</h2>
@@ -39,7 +39,7 @@ export default function AGB() {
 
         <h2 style={h2}>5. Versand</h2>
         <p style={p}>
-          Der Versand erfolgt innerhalb der auf der Website angegebenen Lieferzeit. Bei Lieferverzögerungen wird der Kunde informiert.
+          Wir liefern nach Österreich und Deutschland. Der Versand erfolgt innerhalb der auf der Website angegebenen Lieferzeit (Österreich in der Regel 2–4 Werktage, Deutschland 4–7 Werktage). Bei Lieferverzögerungen wird der Kunde informiert.
         </p>
 
         <h2 style={h2}>6. Gewährleistung</h2>

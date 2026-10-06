@@ -93,6 +93,10 @@ export const DISCOUNT_CODES = {
 
 export const FAQS = [
   {
+    q: "Wohin versendet ihr und was kostet der Versand?",
+    a: "Wir versenden nach Österreich (4,90 €, gratis ab 50 €) und Deutschland (12,90 €, gratis ab 80 €). Innerhalb der EU fallen keine Zollgebühren an. Andere Länder auf Anfrage über das Kontaktformular.",
+  },
+  {
     q: "Wie lange dauert die Herstellung?",
     a: "Die meisten Produkte werden innerhalb von 2–4 Werktagen gedruckt und versendet. Bei individuellen Anfragen kann es je nach Auslastung etwas länger dauern – du bekommst aber immer vorab eine Einschätzung.",
   },
@@ -113,3 +117,9 @@ export const FAQS = [
 export function formatPrice(n) {
   return n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 }
+
+// Versand – Länder und Preise (hier anpassen)
+export const SHIPPING_RATES = {
+  AT: { label: "Österreich", cost: 4.9, freeFrom: 50, days: "2–4 Werktage" },
+  DE: { label: "Deutschland", cost: 12.9, freeFrom: 80, days: "4–7 Werktage" },
+};

@@ -32,7 +32,7 @@ function buildHtml(order, shippingInfo) {
 <tr><td style="font-size:22px;font-weight:bold;padding-bottom:4px;">SuchyPrints</td></tr>
 <tr><td style="font-size:13px;color:#7A7A82;padding-bottom:24px;">Handgefertigte 3D-Drucke aus der Steiermark</td></tr>
 <tr><td style="font-size:18px;font-weight:bold;padding-bottom:10px;">Danke für deine Bestellung${firstName ? ", " + firstName : ""}!</td></tr>
-<tr><td style="font-size:15px;line-height:1.6;padding-bottom:20px;">Wir haben deine Bestellung und deine Zahlung erhalten. Deine Teile werden jetzt gedruckt und in der Regel innerhalb von 2–4 Werktagen verschickt.</td></tr>
+<tr><td style="font-size:15px;line-height:1.6;padding-bottom:20px;">Wir haben deine Bestellung und deine Zahlung erhalten. Deine Teile werden jetzt gedruckt und verschickt – innerhalb Österreichs in der Regel in 2–4 Werktagen, nach Deutschland in 4–7 Werktagen.</td></tr>
 <tr><td style="padding-bottom:6px;font-size:13px;color:#7A7A82;">Bestellnummer: ${esc(order.id)}<br>PayPal-Transaktion: ${esc(order.paypal_transaction_id)}</td></tr>
 <tr><td style="padding:12px 0 20px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #EEE;border-bottom:1px solid #EEE;">
 ${rows}

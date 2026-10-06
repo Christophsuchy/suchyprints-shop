@@ -3,15 +3,12 @@ import { Link } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { supabase } from "./supabaseClient";
 import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Loader2, Trash2, Sun, Moon, Truck, RotateCcw, ShieldCheck, ChevronDown, Tag, PenTool, Sparkles, Package, Mail, Star } from "lucide-react";
-import { CATEGORIES, MATERIALS, PRODUCTS, TAG_LABELS, DISCOUNT_CODES, FAQS, SHOP_OPEN, formatPrice, parseCartKey, colorLabel } from "./shopData";
+import { CATEGORIES, MATERIALS, PRODUCTS, TAG_LABELS, DISCOUNT_CODES, FAQS, SHOP_OPEN, SHIPPING_RATES, formatPrice, parseCartKey, colorLabel } from "./shopData";
 import ProductIllustration from "./ProductIllustration";
 import { EMAILJS_SERVICE_ID, EMAILJS_PUBLIC_KEY, SHOP_OWNER_EMAIL, EMAILJS_ORDER_TEMPLATE_ID } from "./emailConfig";
 
 const EMAILJS_TEMPLATE_ID = EMAILJS_ORDER_TEMPLATE_ID;
 
-// Versandkosten innerhalb Österreichs
-const SHIPPING_COST = 4.9;
-const FREE_SHIPPING_FROM = 50;
 const TAX_NOTE = "Gemäß § 6 Abs. 1 Z 27 UStG wird keine Umsatzsteuer berechnet (Kleinunternehmerregelung).";
 
 // PayPal-Zugangsdaten – auf https://developer.paypal.com kostenlos anlegen,
@@ -96,6 +93,7 @@ export default function Shop() {
   const [discountError, setDiscountError] = useState("");
   const [openFaq, setOpenFaq] = useState(null);
   const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [shippingCountry, setShippingCountry] = useState("AT");
   const [newsletterStatus, setNewsletterStatus] = useState(null);
   const [newsletterConsent, setNewsletterConsent] = useState(false);
   const [newsletterHoneypot, setNewsletterHoneypot] = useState("");
@@ -211,7 +209,8 @@ export default function Shop() {
   const cartCount = cartItems.reduce((s, i) => s + i.qty, 0);
   const subtotal = cartItems.reduce((s, i) => s + i.qty * i.price, 0);
   const discountedTotal = Math.round((discountApplied ? subtotal * (1 - discountApplied.percent) : subtotal) * 100) / 100;
-  const shippingCost = cartItems.length > 0 && discountedTotal < FREE_SHIPPING_FROM ? SHIPPING_COST : 0;
+  const shippingRate = SHIPPING_RATES[shippingCountry] || SHIPPING_RATES.AT;
+  const shippingCost = cartItems.length > 0 && discountedTotal < shippingRate.freeFrom ? shippingRate.cost : 0;
   const grandTotal = Math.round((discountedTotal + shippingCost) * 100) / 100;
 
   const applyDiscountCode = () => {
@@ -265,10 +264,10 @@ export default function Shop() {
       .map((i) => `${i.qty}x ${i.name}${i.colorText ? ` – Farbe: ${i.colorText}` : ""} (${formatPrice(i.price)} pro Stück) = ${formatPrice(i.qty * i.price)}`)
       .join("\n") +
       (discountApplied ? `\nRabatt (${discountApplied.code}): -${formatPrice(subtotal - discountedTotal)}` : "") +
-      `\nVersand: ${shippingCost > 0 ? formatPrice(shippingCost) : "gratis"}` +
+      `\nVersand nach ${shippingRate.label}: ${shippingCost > 0 ? formatPrice(shippingCost) : "gratis"}` +
       (shippingInfo ? `\n\nLieferadresse:\n${shippingInfo}` : "");
     const itemsForDb = cartItems.map((i) => ({ name: i.colorText ? `${i.name} (${i.colorText})` : i.name, qty: i.qty, price: i.price }));
-    if (shippingCost > 0) itemsForDb.push({ name: "Versand", qty: 1, price: shippingCost });
+    if (shippingCost > 0) itemsForDb.push({ name: `Versand ${shippingRate.label}`, qty: 1, price: shippingCost });
     try {
       const { data: insertedOrder, error: dbError } = await supabase
         .from("orders")
@@ -344,6 +343,14 @@ export default function Shop() {
               },
             ],
           }),
+        onShippingAddressChange: (data, actions) => {
+          if (data?.shippingAddress?.countryCode !== shippingCountry) {
+            setSendError(`Die Lieferadresse muss in ${shippingRate.label} liegen. Bitte im Warenkorb das richtige Lieferland wählen.`);
+            return actions.reject(data?.errors?.COUNTRY_ERROR);
+          }
+          setSendError("");
+          return undefined;
+        },
         onApprove: async (data, actions) => {
           const details = await actions.order.capture();
           const ship = details?.purchase_units?.[0]?.shipping;
@@ -356,7 +363,7 @@ export default function Shop() {
         onError: () => setSendError("PayPal-Zahlung fehlgeschlagen. Bitte erneut versuchen."),
       })
       .render(paypalRef.current);
-  }, [paypalReady, customerName, customerEmail, grandTotal, cartItems.length, checkoutDone]);
+  }, [paypalReady, customerName, customerEmail, grandTotal, shippingCountry, cartItems.length, checkoutDone]);
 
   return (
     <div className={`sw-app ${darkMode ? "dark" : ""}`} style={{ fontFamily: "var(--font-body)", color: "var(--ink)", background: "var(--bg)", minHeight: "100%" }}>
@@ -949,7 +956,7 @@ export default function Shop() {
               </div>
               <div>
                 <p style={{ fontWeight: 600, fontSize: 13.5, margin: 0 }}>2–4 Werktage</p>
-                <p style={{ color: "var(--muted)", fontSize: 12, margin: "2px 0 0" }}>Versand innerhalb Österreichs</p>
+                <p style={{ color: "var(--muted)", fontSize: 12, margin: "2px 0 0" }}>Versand nach Österreich &amp; Deutschland</p>
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -957,8 +964,8 @@ export default function Shop() {
                 <Tag size={16} color="var(--accent)" />
               </div>
               <div>
-                <p style={{ fontWeight: 600, fontSize: 13.5, margin: 0 }}>4,90 € Versand</p>
-                <p style={{ color: "var(--muted)", fontSize: 12, margin: "2px 0 0" }}>Gratis ab 50 € Bestellwert</p>
+                <p style={{ fontWeight: 600, fontSize: 13.5, margin: 0 }}>Ab 4,90 € Versand</p>
+                <p style={{ color: "var(--muted)", fontSize: 12, margin: "2px 0 0" }}>AT gratis ab 50 € · DE ab 80 €</p>
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -1267,13 +1274,26 @@ export default function Shop() {
                 <span>{formatPrice(discountedTotal)}</span>
               </span>
             </div>
+            <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, color: "var(--muted)", marginBottom: 6, gap: 8 }}>
+              <span>Lieferland</span>
+              <select
+                value={shippingCountry}
+                onChange={(e) => setShippingCountry(e.target.value)}
+                disabled={checkoutDone}
+                style={{ border: "1px solid var(--line)", borderRadius: 8, padding: "4px 8px", fontSize: 13, background: "var(--surface)", color: "var(--ink)", fontFamily: "var(--font-body)" }}
+              >
+                {Object.entries(SHIPPING_RATES).map(([code, r]) => (
+                  <option key={code} value={code}>{r.label}</option>
+                ))}
+              </select>
+            </label>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: 13, color: "var(--muted)", marginBottom: 8 }}>
-              <span>Versand (Österreich)</span>
+              <span>Versand ({shippingRate.days})</span>
               <span style={{ fontFamily: "var(--font-mono)" }}>{shippingCost > 0 ? formatPrice(shippingCost) : "gratis"}</span>
             </div>
             {shippingCost > 0 && (
               <p style={{ fontSize: 11.5, color: "var(--muted)", margin: "-4px 0 8px" }}>
-                Noch {formatPrice(FREE_SHIPPING_FROM - discountedTotal)} bis zum Gratisversand
+                Noch {formatPrice(shippingRate.freeFrom - discountedTotal)} bis zum Gratisversand
               </p>
             )}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--line)", paddingTop: 8 }}>
@@ -1286,7 +1306,7 @@ export default function Shop() {
           {!checkoutDone && (
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14, gap: 6 }}>
               <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--muted)" }}><ShieldCheck size={13} /> Sichere Zahlung</span>
-              <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--muted)" }}><Truck size={13} /> 2–4 Werktage</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--muted)" }}><Truck size={13} /> {shippingRate.days}</span>
               <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--muted)" }}><RotateCcw size={13} /> AT handgefertigt</span>
             </div>
           )}

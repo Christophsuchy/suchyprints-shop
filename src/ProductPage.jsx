@@ -196,7 +196,7 @@ export default function ProductPage() {
             </div>
             <p style={{ fontSize: 12, color: "#7A7A82", margin: "-18px 0 24px", lineHeight: 1.5 }}>
               Keine USt. gem. § 6 Abs. 1 Z 27 UStG (Kleinunternehmer) · zzgl.{" "}
-              <Link to="/agb" style={{ color: "#7A7A82" }}>Versand</Link> 4,90 €, gratis ab 50 €
+              <Link to="/agb" style={{ color: "#7A7A82" }}>Versand</Link> (AT 4,90 € · DE 12,90 €)
             </p>
 
             {product.inStock ? (
