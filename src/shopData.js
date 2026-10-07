@@ -117,6 +117,9 @@ export const PRODUCTS = [
     video: { mp4: "/products/zahnrad-fidget-spin.mp4", webm: "/products/zahnrad-fidget-spin.webm", poster: "/products/zahnrad-fidget-spin-poster.webp" },
     description: "Zwei Zahnrad-Fidgets in deinen Wunschfarben – eins für dich, eins zum Verschenken (oder einfach zwei zum Abwechseln). Jedes in einem Stück gedruckt, ganz ohne Zusammenbau. Ø 60 mm, 10 mm hoch. Enthält Kleinteile, nicht für Kinder unter 3 Jahren geeignet." },
   { id: "p24", name: "Fidget-Spinner", category: "spielzeug", material: "PLA", price: 11.0, hue: "#D4537E", inStock: false, comingSoon: true, description: "Klassischer Fidget-Spinner in eigenem SuchyPrints-Design, mit Kugellager für lange, ruhige Drehungen. Enthält Kleinteile, nicht für Kinder unter 3 Jahren geeignet." },
+  { id: "p26", name: "Hausnummer-Schild, personalisiert", category: "individuell", material: "PETG", price: 24.99, hue: "#3A3C42", tag: "neu", inStock: false, comingSoon: true,
+    colors: SOLID_COLORS, colorCount: 2, personalize: { type: "housesign", label: "Familienname", maxLength: 18, extraLabel: "Hausnummer", extraPlaceholder: "z. B. 12 oder 7b" },
+    description: "Dein Hausnummer-Schild im modernen Design: große Hausnummer, feiner Trennstrich und darunter „Familie“ mit eurem Namen. Gib Nummer und Namen ein und sieh sofort die Vorschau. Zweifarbig gedruckt (Platte + Schrift) aus wetterfestem PETG – ideal für Hauswand, Zaun oder Briefkasten." },
   { id: "p21", name: "Ersatzteil nach Foto oder Maß", category: "individuell", material: "PLA", price: 12.0, hue: "#2F6FED", inStock: false, comingSoon: true, description: "Ein Teil kaputt und nicht mehr erhältlich? Schick uns ein Foto und die Maße – wir modellieren und drucken dir einen passenden Ersatz. Preis ist ein Richtwert und hängt vom Aufwand ab, wir melden uns vorab mit einem konkreten Angebot." },
 ];
 
