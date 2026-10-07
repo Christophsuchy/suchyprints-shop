@@ -106,9 +106,11 @@ export default function ProductPage() {
             <div style={{ position: "relative" }}>
               <PersonalizePreview
                 product={product}
-                colorCss={(product.colors || []).find((c) => c.id === picks[0])?.css || "#8a8d91"}
+                colorCss={(product.colors || []).find((c) => c.id === picks[0])?.css || (pers.type === "housesign" ? "#3A3C42" : "#8a8d91")}
+                colorCss2={(product.colors || []).find((c) => c.id === picks[1])?.css}
                 text={pText}
                 fontId={pFont}
+                extra={pExtra}
               />
               {!product.inStock && (
                 <span style={{ position: "absolute", top: 16, left: 16, background: "#7A7A82", color: "#fff", fontSize: 12, fontWeight: 700, padding: "6px 12px", borderRadius: 999 }}>
@@ -196,6 +198,7 @@ export default function ProductPage() {
                   placeholder="Hier eintippen …"
                   style={{ width: "100%", border: "1px solid #D9D2C8", borderRadius: 10, padding: "11px 14px", fontSize: 15, outline: "none", background: "#fff", color: "#2B2E4A", fontFamily: "'Inter', sans-serif" }}
                 />
+                {pers.type !== "housesign" && (<>
                 <p style={{ fontSize: 13, fontWeight: 600, margin: "14px 0 8px" }}>Schrift</p>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {PERSONALIZE_FONTS.map((f) => (
@@ -214,13 +217,14 @@ export default function ProductPage() {
                     </button>
                   ))}
                 </div>
+                </>)}
                 {pers.extraLabel && (
                   <>
                     <label style={{ display: "block", fontSize: 13, fontWeight: 600, margin: "14px 0 8px" }}>{pers.extraLabel}</label>
                     <input
                       value={pExtra}
-                      maxLength={20}
-                      inputMode="decimal"
+                      maxLength={pers.type === "housesign" ? 6 : 20}
+                      inputMode={pers.type === "housesign" ? "text" : "decimal"}
                       onChange={(e) => { setPExtra(e.target.value.replace(/[|]/g, "")); setAdded(false); }}
                       placeholder={pers.extraPlaceholder || ""}
                       style={{ width: 160, border: "1px solid #D9D2C8", borderRadius: 10, padding: "10px 14px", fontSize: 14.5, outline: "none", background: "#fff", color: "#2B2E4A", fontFamily: "'Inter', sans-serif" }}
@@ -237,7 +241,7 @@ export default function ProductPage() {
                   return (
                     <div key={slot} style={{ marginBottom: 14 }}>
                       <p style={{ fontSize: 13, fontWeight: 600, margin: "0 0 8px" }}>
-                        {colorCount > 1 ? `Farbe ${slot + 1}` : "Farbe"}
+                        {pers?.type === "housesign" && colorCount > 1 ? (slot === 0 ? "Farbe Platte" : "Farbe Schrift") : colorCount > 1 ? `Farbe ${slot + 1}` : "Farbe"}
                         <span style={{ fontWeight: 400, color: "#7A7A82" }}>{chosen ? ` – ${chosen.label}` : " – bitte wählen"}</span>
                       </p>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>

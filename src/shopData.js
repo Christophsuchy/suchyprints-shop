@@ -56,6 +56,7 @@ function safeDecode(v) {
 }
 export const personalizeLabel = (product, { text, font, extra }) => {
   if (!product?.personalize || !text) return "";
+  if (product.personalize.type === "housesign") return `Hausnummer ${extra || "?"} · „Familie ${text}“`;
   const f = PERSONALIZE_FONTS.find((x) => x.id === font);
   const bits = [`„${text}“`];
   if (f) bits.push(`Schrift ${f.label}`);

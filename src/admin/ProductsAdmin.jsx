@@ -18,7 +18,11 @@ const PERS_TYPES = [
   { id: "nameplate", label: "Namensschild" },
   { id: "bowl", label: "Napf-Untersteller" },
   { id: "penholder", label: "Stiftehalter" },
+  { id: "housesign", label: "Hausnummer-Schild (Nummer + Name, 2 Farben)" },
 ];
+const PERS_PRESETS = {
+  housesign: { label: "Familienname", maxLength: 18, extraLabel: "Hausnummer", extraPlaceholder: "z. B. 12 oder 7b" },
+};
 
 async function shrink(file) {
   const url = URL.createObjectURL(file);
@@ -190,7 +194,7 @@ function Editor({ row, onClose, onSaved, onDeleted }) {
           )}
           <div>
             <label style={lbl}>Personalisierung</label>
-            <select value={pers?.type || ""} onChange={(e) => setD((x) => ({ ...x, personalize: e.target.value ? { label: "Wunschtext", maxLength: 12, ...(x.personalize || {}), type: e.target.value } : null }))} style={inp}>
+            <select value={pers?.type || ""} onChange={(e) => setD((x) => ({ ...x, personalize: e.target.value ? { label: "Wunschtext", maxLength: 12, ...(x.personalize || {}), ...(PERS_PRESETS[e.target.value] || {}), type: e.target.value } : null, ...(e.target.value === "housesign" ? { colorCount: 2 } : {}) }))} style={inp}>
               {PERS_TYPES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
             </select>
           </div>

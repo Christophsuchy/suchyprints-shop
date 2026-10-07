@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { PERSONALIZE_FONTS } from "./shopData";
 
 // Live-Vorschau für personalisierte Produkte (vereinfachte Darstellung als SVG)
@@ -28,7 +28,68 @@ function FitText({ text, x, y, maxWidth, maxSize, font, fill, rotate }) {
   );
 }
 
-export default function PersonalizePreview({ product, colorCss, text, fontId }) {
+// ---------- Hausnummer-Schild „Modern“ (gleiches Layout wie der STL-Generator schild.py) ----------
+let _ctx = null;
+function textW(txt, weight, sizeMm, tracking = 0) {
+  if (typeof document === "undefined") return txt.length * sizeMm * 0.6;
+  if (!_ctx) _ctx = document.createElement("canvas").getContext("2d");
+  _ctx.font = `${weight} ${sizeMm * 1.38 * 10}px Poppins`;
+  return _ctx.measureText(txt).width / 10 + tracking * Math.max(0, txt.length - 1);
+}
+export function houseSignLayout(nr, name, top = "FAMILIE", WMAX = 250) {
+  let nrSize = 62, nameSize = 17, need = 0, nw = 0, ok = true;
+  for (let i = 0; i < 80; i++) {
+    nw = textW(nr, 700, nrSize);
+    const mw = textW(name, 500, nameSize), tw = textW(top, 300, 8, 1.2);
+    need = 20 + nw + 14 + 1.6 + 11 + Math.max(mw, tw) + 20;
+    if (need <= WMAX) break;
+    if (nameSize > 11) nameSize *= 0.97;
+    else if (nrSize > 34) nrSize *= 0.97;
+    else if (nameSize > 10) nameSize *= 0.97;
+    else { ok = false; break; }
+  }
+  const W = Math.max(150, Math.min(WMAX, need));
+  const xn = -W / 2 + 20 + nw / 2, xd = -W / 2 + 20 + nw + 14, xr = xd + 1.6 + 11;
+  return { W, H: 100, nrSize, nameSize, xn, xd, xr, ok: ok && need <= WMAX + 0.5 };
+}
+
+function HouseSign({ nr, name, plate, ink, placeholder }) {
+  const [, setReady] = useState(0);
+  useEffect(() => {
+    if (typeof document === "undefined" || !document.fonts) return;
+    Promise.all(["300", "500", "700"].map((w) => document.fonts.load(`${w} 40px Poppins`))).then(() => setReady((x) => x + 1)).catch(() => {});
+  }, []);
+  const L = houseSignLayout(nr, name);
+  const s = 364 / L.W, cx = 200, cy = 196;            // mm -> SVG
+  const X = (x) => cx + x * s, Y = (y) => cy - y * s;
+  const fs = (mm) => mm * 1.38 * s;
+  const edge = shade(plate, -0.45), inkShadow = shade(ink, -0.35);
+  const op = placeholder ? 0.45 : 1;
+  const T = (props, children) => <text fontFamily="Poppins, sans-serif" dominantBaseline="central" {...props}>{children}</text>;
+  const layer = (dx, dy, fill) => (
+    <g transform={`translate(${dx} ${dy})`} fill={fill} opacity={op}>
+      {T({ x: X(L.xn), y: Y(-2), textAnchor: "middle", fontWeight: 700, fontSize: fs(L.nrSize) }, nr)}
+      <rect x={X(L.xd)} y={Y(30)} width={1.6 * s} height={60 * s} />
+      {T({ x: X(L.xr + 1), y: Y(10), fontWeight: 300, fontSize: fs(8), letterSpacing: 1.2 * s }, "FAMILIE")}
+      {T({ x: X(L.xr), y: Y(-8), fontWeight: 500, fontSize: fs(L.nameSize) }, name)}
+    </g>
+  );
+  return (
+    <g>
+      <ellipse cx="200" cy={Y(-50) + 26} rx={L.W * s * 0.5} ry="14" fill="url(#floor)" />
+      <rect x={X(-L.W / 2) + 4} y={Y(50) + 7} width={L.W * s} height={100 * s} rx={8 * s} fill={edge} />
+      <rect x={X(-L.W / 2)} y={Y(50)} width={L.W * s} height={100 * s} rx={8 * s} fill={plate} />
+      <rect x={X(-L.W / 2)} y={Y(50)} width={L.W * s} height={100 * s} rx={8 * s} fill="url(#layers)" />
+      {layer(1.6, 2.2, inkShadow)}
+      {layer(0, 0, ink)}
+      <text x="200" y={Y(-50) + 52} textAnchor="middle" fontFamily="Inter, sans-serif" fontSize="12.5" fill={L.ok ? "#7A7A82" : "#A32D2D"}>
+        {L.ok ? `ca. ${Math.round(L.W / 10)} × 10 cm` : "Text zu lang – bitte kürzen"}
+      </text>
+    </g>
+  );
+}
+
+export default function PersonalizePreview({ product, colorCss, colorCss2, text, fontId, extra }) {
   const type = product.personalize?.type;
   const base = colorCss && colorCss.startsWith("#") ? colorCss : "#8a8d91";
   const font = PERSONALIZE_FONTS.find((f) => f.id === fontId) || PERSONALIZE_FONTS[0];
@@ -97,6 +158,16 @@ export default function PersonalizePreview({ product, colorCss, text, fontId }) 
             <path d={`M 108 186 L 292 186 L 282 280 L 118 280 Z`} fill={dark} opacity="0.18" />
             <FitText text={shown} x={200} y={234} maxWidth={160} maxSize={52} font={font} fill={textFill} />
           </g>
+        )}
+
+        {type === "housesign" && (
+          <HouseSign
+            nr={extra?.trim() || "12"}
+            name={text?.trim() || "Muster"}
+            plate={colorCss && colorCss.startsWith("#") ? colorCss : "#3A3C42"}
+            ink={colorCss2 && colorCss2.startsWith("#") ? colorCss2 : "#EEECE6"}
+            placeholder={!text?.trim() && !extra?.trim()}
+          />
         )}
 
         {type === "penholder" && (
