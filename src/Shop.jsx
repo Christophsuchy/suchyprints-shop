@@ -48,7 +48,7 @@ export function Logo({ size = 44, withText = true, color = "#2B2E4A", accent = "
     <svg width={size} height={size} viewBox="0 0 240 240" style={style}>
       <defs>
         <path id={topArcId} d="M 22 122 A 100 100 0 0 1 218 122" fill="none" />
-        <path id={bottomArcId} d="M 218 130 A 100 100 0 0 1 22 130" fill="none" />
+        <path id={bottomArcId} d="M 26 120 A 94 94 0 0 0 214 120" fill="none" />
       </defs>
       <circle cx="120" cy="120" r="112" fill="none" stroke={color} strokeWidth="6" />
       <circle cx="120" cy="120" r="97" fill="none" stroke={color} strokeWidth="2.5" />
