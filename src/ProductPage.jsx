@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Plus, Check } from "lucide-react";
-import { MATERIALS, PERSONALIZE_FONTS, formatPrice, cartKey } from "./shopData";
+import { MATERIALS, PERSONALIZE_FONTS, formatPrice, cartKey, isReference, isShopProduct } from "./shopData";
 import { useProducts } from "./productStore";
 import PersonalizePreview from "./PersonalizePreview";
 import { Logo } from "./Shop";
@@ -12,7 +12,7 @@ export default function ProductPage() {
   const { id } = useParams();
   const loadedProducts = useProducts();
   const PRODUCTS = loadedProducts || [];
-  const product = PRODUCTS.find((p) => p.id === id);
+  const product = PRODUCTS.find((p) => p.id === id && !isReference(p));
   const [added, setAdded] = useState(false);
   const [sel, setSel] = useState(0);
   const colorCount = product?.colorCount || 0;
@@ -41,7 +41,7 @@ export default function ProductPage() {
     : [];
   const cur = media[sel] || media[0];
   const related = product
-    ? PRODUCTS.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 3)
+    ? PRODUCTS.filter((p) => isShopProduct(p) && p.category === product.category && p.id !== product.id).slice(0, 3)
     : [];
 
   const addToCart = () => {

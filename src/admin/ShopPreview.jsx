@@ -1,20 +1,21 @@
 import React, { useState } from "react";
-import { MATERIALS, TAG_LABELS, formatPrice } from "../shopData";
+import { MATERIALS, TAG_LABELS, formatPrice, isShopProduct, isReference } from "../shopData";
 import ProductIllustration from "../ProductIllustration";
 
 // Verkleinerte Nachbildung des Produktrasters im Shop – zeigt die aktuelle Reihenfolge live
 export default function ShopPreview({ rows, highlight }) {
   const [mode, setMode] = useState("fertig");
   const visible = rows.filter((r) => r.active).map((r) => ({ id: r.id, ...(r.data || {}) }));
-  const shown = visible.filter((p) => (mode === "individuell" ? p.category === "individuell" : p.category !== "individuell"));
-  const fertig = visible.filter((p) => p.category !== "individuell").length;
+  const shown = visible.filter((p) => (mode === "individuell" ? isReference(p) : isShopProduct(p)));
+  const fertig = visible.filter(isShopProduct).length;
+  const galerie = visible.filter(isReference).length;
 
   return (
     <div style={{ background: "#F7F4EF", border: "1px solid #D3D7DD", borderRadius: 14, padding: 14, fontFamily: "Inter, sans-serif", color: "#2B2E4A" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, gap: 8 }}>
         <span style={{ fontSize: 12, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.06em" }}>Live-Vorschau Shop</span>
         <span style={{ display: "flex", gap: 4 }}>
-          {[["fertig", `Fertige (${fertig})`], ["individuell", `Individuell (${visible.length - fertig})`]].map(([id, label]) => (
+          {[["fertig", `Produkte (${fertig})`], ["individuell", `Galerie (${galerie})`]].map(([id, label]) => (
             <button key={id} onClick={() => setMode(id)}
               style={{ fontSize: 11.5, padding: "4px 9px", borderRadius: 999, cursor: "pointer", border: "1px solid #D3D7DD", background: mode === id ? "#2B2E4A" : "#fff", color: mode === id ? "#fff" : "#2B2E4A" }}>
               {label}

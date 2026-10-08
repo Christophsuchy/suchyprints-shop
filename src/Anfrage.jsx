@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowLeft, Upload, X, Send, Loader2, Check, FileBox, Image as ImageIcon } from "lucide-react";
+import ReferenceGallery from "./ReferenceGallery";
 
 const KINDS = ["Ersatzteil nach Foto oder Maß", "Eigenes 3D-Modell drucken (STL/3MF)", "Personalisiertes Geschenk", "Etwas anderes"];
 const MATERIALS = ["Egal / Empfehlung", "PLA", "PETG (robuster, hitzebeständiger)", "TPU (flexibel)"];
@@ -120,11 +121,13 @@ export default function Anfrage() {
         <Link to="/" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#7A7A82", fontSize: 13.5, textDecoration: "none", marginBottom: 26 }}>
           <ArrowLeft size={15} /> Zurück zum Shop
         </Link>
-        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 30, margin: "0 0 8px" }}>Individuelle Anfrage</h1>
+        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 30, margin: "0 0 8px" }}>Nach deiner Idee</h1>
         <p style={{ color: "#5C5763", fontSize: 14.5, lineHeight: 1.6, margin: "0 0 24px" }}>
           Ersatzteil, eigenes Modell oder eine Idee im Kopf? Beschreib uns, was du brauchst – gern mit Fotos oder 3D-Datei.
           Wir melden uns in der Regel innerhalb von 1–2 Werktagen mit Einschätzung und Preis. Die Anfrage ist unverbindlich.
         </p>
+
+        {!sent && <ReferenceGallery />}
 
         {sent ? (
           <div style={{ ...card, textAlign: "center", padding: "36px 24px" }}>

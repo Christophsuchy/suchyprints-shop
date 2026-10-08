@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { supabase } from "./supabaseClient";
 import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Loader2, Trash2, Sun, Moon, Truck, RotateCcw, ShieldCheck, ChevronDown, Tag, PenTool, Sparkles, Package, Mail, Star } from "lucide-react";
-import { CATEGORIES, MATERIALS, TAG_LABELS, DISCOUNT_CODES, FAQS, SHOP_OPEN, SHIPPING_RATES, formatPrice, parseCartKey, colorLabel, personalizeLabel } from "./shopData";
+import { CATEGORIES, MATERIALS, TAG_LABELS, DISCOUNT_CODES, FAQS, SHOP_OPEN, SHIPPING_RATES, formatPrice, parseCartKey, colorLabel, personalizeLabel, isShopProduct } from "./shopData";
 import ProductIllustration from "./ProductIllustration";
 import { useProducts } from "./productStore";
 import { EMAILJS_SERVICE_ID, EMAILJS_PUBLIC_KEY, SHOP_OWNER_EMAIL, EMAILJS_ORDER_TEMPLATE_ID } from "./emailConfig";
@@ -78,8 +78,8 @@ export default function Shop() {
   const PRODUCTS = loadedProducts || [];
   const productsLoading = !loadedProducts;
   const [cart, setCart] = useState({});
-  const [mode, setMode] = useState("fertig"); // "fertig" | "individuell"
-  const [category, setCategory] = useState("alle");
+  const [category, setCategory] = useState("alle"); // alle | deko | technik | spielzeug | personalisierbar
+  const [onlyPers, setOnlyPers] = useState(false);
   const [query, setQuery] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutDone, setCheckoutDone] = useState(false);
@@ -180,18 +180,18 @@ export default function Shop() {
 
   const filtered = useMemo(() => {
     return PRODUCTS.filter((p) => {
-      const matchQuery = p.name.toLowerCase().includes(query.toLowerCase());
-      // Bei aktiver Suche werden beide Bereiche durchsucht
-      if (query) return matchQuery;
-      if (mode === "individuell") return p.category === "individuell";
-      const matchCat = category === "alle" || p.category === category;
-      return p.category !== "individuell" && matchCat;
+      if (!isShopProduct(p)) return false;
+      if (query) return p.name.toLowerCase().includes(query.toLowerCase());
+      const matchCat = category === "alle" || (category === "personalisierbar" ? !!p.personalize : p.category === category);
+      return matchCat && (!onlyPers || !!p.personalize);
     });
-  }, [mode, category, query, loadedProducts]);
+  }, [category, onlyPers, query, loadedProducts]);
 
-  const countFertig = PRODUCTS.filter((p) => p.category !== "individuell").length;
-  const countIndividuell = PRODUCTS.filter((p) => p.category === "individuell").length;
-  const SUB_CATEGORIES = CATEGORIES.filter((c) => c.id !== "individuell");
+  const countProdukte = PRODUCTS.filter(isShopProduct).length;
+  const SUB_CATEGORIES = [
+    ...CATEGORIES.filter((c) => !["individuell", "referenz"].includes(c.id)),
+    { id: "personalisierbar", label: "Personalisierbar", icon: Wand2 },
+  ];
   const ActiveCatIcon = (SUB_CATEGORIES.find((c) => c.id === category) || SUB_CATEGORIES[0]).icon;
 
   const cartItems = useMemo(() => {
@@ -204,7 +204,7 @@ export default function Shop() {
       // Nicht mehr vorhandene oder nicht bestellbare Produkte aus alten Warenkörben ignorieren,
       // ebenso Farbprodukte ohne (vollständige) Farbwahl und personalisierte Produkte ohne Wunschtext
       .filter(({ product, colors, text }) =>
-        product && product.inStock &&
+        product && product.inStock && isShopProduct(product) &&
         (!product.colorCount || colors.length === product.colorCount) &&
         (!product.personalize || text))
       .map(({ key, colors, text, font, extra, product, qty }) => ({
@@ -529,6 +529,9 @@ export default function Shop() {
           display: flex;
           align-items: center;
           justify-content: space-between;
+          flex-wrap: wrap;
+          column-gap: 16px;
+          row-gap: 10px;
           gap: 12px;
           margin-top: 20px;
         }
@@ -576,6 +579,9 @@ export default function Shop() {
         }
         .sw-app.dark .sw-select select { color-scheme: dark; }
         .sw-cat-count { color: var(--muted); font-size: 13px; white-space: nowrap; }
+        .sw-pers-filter { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; color: var(--ink); cursor: pointer; user-select: none; white-space: nowrap; }
+        .sw-pers-filter input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; margin: 0; }
+        .sw-pers-filter:has(input:disabled) { opacity: 0.6; cursor: default; }
         @media (max-width: 600px) {
           .sw-select { flex: 1; min-width: 0; }
         }
@@ -810,33 +816,30 @@ export default function Shop() {
           </div>
         </section>
 
-        {/* Bereichsauswahl: Fertige Produkte / Individuell */}
+        {/* Bereichsauswahl: Produkte / Nach deiner Idee */}
         <section id="produkte" style={{ maxWidth: 1080, margin: "0 auto", padding: "0 24px 8px", scrollMarginTop: 80 }}>
           <div className="sw-mode-grid">
             <button
-              className={`sw-mode-card ${mode === "fertig" && !query ? "active" : ""}`}
-              onClick={() => { setMode("fertig"); setQuery(""); }}
+              className={`sw-mode-card ${!query ? "active" : ""}`}
+              onClick={() => { setQuery(""); }}
             >
               <span className="sw-mode-icon"><Package size={20} /></span>
               <span className="sw-mode-text">
-                <span className="sw-mode-title">Fertige Produkte</span>
-                <span className="sw-mode-sub">Aus unserem Sortiment · {countFertig} Artikel</span>
+                <span className="sw-mode-title">Produkte</span>
+                <span className="sw-mode-sub">Direkt bestellen – vieles auch mit deinem Namen · {countProdukte} Artikel</span>
               </span>
             </button>
-            <button
-              className={`sw-mode-card ${mode === "individuell" && !query ? "active" : ""}`}
-              onClick={() => { setMode("individuell"); setQuery(""); }}
-            >
+            <Link to="/anfrage" className="sw-mode-card" style={{ textDecoration: "none", color: "inherit" }}>
               <span className="sw-mode-icon"><Wand2 size={20} /></span>
               <span className="sw-mode-text">
-                <span className="sw-mode-title">Individuell</span>
-                <span className="sw-mode-sub">Mit Namen, nach Maß oder dein Design · {countIndividuell} Artikel</span>
+                <span className="sw-mode-title">Nach deiner Idee</span>
+                <span className="sw-mode-sub">Ersatzteil, eigenes Modell oder Sonderwunsch – auf Anfrage</span>
               </span>
-            </button>
+            </Link>
           </div>
 
-          {/* Unterkategorie (nur bei fertigen Produkten) */}
-          {mode === "fertig" && !query && (
+          {/* Kategorie + Filter */}
+          {!query && (
             <div className="sw-cat-bar">
               <div className="sw-select">
                 <span className="sw-select-icon">
@@ -855,6 +858,15 @@ export default function Shop() {
                 </select>
                 <ChevronDown size={16} className="sw-select-chevron" />
               </div>
+              <label className="sw-pers-filter">
+                <input
+                  type="checkbox"
+                  checked={onlyPers || category === "personalisierbar"}
+                  disabled={category === "personalisierbar"}
+                  onChange={(e) => setOnlyPers(e.target.checked)}
+                />
+                Nur personalisierbare
+              </label>
               <span className="sw-cat-count">
                 {filtered.length} Artikel
               </span>
@@ -863,34 +875,10 @@ export default function Shop() {
 
           {query && (
             <p style={{ color: "var(--muted)", fontSize: 13.5, margin: "16px 0 0" }}>
-              Suchergebnisse für „{query}“ in allen Bereichen
+              Suchergebnisse für „{query}“
             </p>
           )}
         </section>
-
-        {/* Individuell-Hinweis */}
-        {mode === "individuell" && !query && (
-          <section style={{ maxWidth: 1080, margin: "0 auto", padding: "16px 24px 0" }}>
-            <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, padding: "20px 22px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-              <div style={{ width: 44, height: 44, borderRadius: 10, background: "#FBEAF0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Wand2 size={20} color="#993556" />
-              </div>
-              <div style={{ flex: 1, minWidth: 200 }}>
-                <p style={{ fontWeight: 600, margin: 0, fontFamily: "var(--font-display)" }}>Eigenes Design drucken lassen</p>
-                <p style={{ color: "var(--muted)", fontSize: 13.5, margin: "4px 0 0" }}>
-                  Schick uns dein Modell (STL) oder deine Idee – wir kalkulieren Material, Zeit und Preis individuell.
-                </p>
-              </div>
-              <Link
-                to="/anfrage"
-                className="sw-add-btn"
-                style={{ background: "var(--accent)", borderColor: "var(--accent)", textDecoration: "none" }}
-              >
-                <Send size={14} /> Anfrage stellen
-              </Link>
-            </div>
-          </section>
-        )}
 
         {/* Produktgrid */}
         <section style={{ maxWidth: 1080, margin: "0 auto", padding: "20px 24px 80px" }}>

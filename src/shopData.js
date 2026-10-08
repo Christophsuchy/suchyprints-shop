@@ -72,7 +72,16 @@ export const CATEGORIES = [
   { id: "technik", label: "Technik", icon: Cog },
   { id: "spielzeug", label: "Spielzeug", icon: Gamepad2 },
   { id: "individuell", label: "Individuell", icon: Wand2 },
+  { id: "referenz", label: "Kundenprojekt (Galerie auf der Anfrage-Seite)", icon: Wand2 },
 ];
+
+// Bereiche im Shop:
+// - Kundenprojekte (category "referenz") erscheinen nur als Beispielbilder auf der Anfrage-Seite
+// - Dienstleistungen (category "individuell" ohne Personalisierung, z. B. Ersatzteil) laufen über das Anfrage-Formular
+// - alles andere sind bestellbare Produkte, personalisierbare eingeschlossen
+export const isReference = (p) => p?.category === "referenz";
+export const isService = (p) => p?.category === "individuell" && !p?.personalize;
+export const isShopProduct = (p) => !!p && !isReference(p) && !isService(p);
 
 export const MATERIALS = {
   PLA: { label: "PLA", color: "#FF6A13" },

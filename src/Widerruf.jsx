@@ -35,7 +35,7 @@ export default function Widerruf() {
 
         <h2 style={h2}>Ausschluss des Widerrufsrechts</h2>
         <p style={p}>
-          Das Widerrufsrecht besteht nicht bei Verträgen zur Lieferung von Waren, die nicht vorgefertigt sind und für deren Herstellung eine individuelle Auswahl oder Bestimmung durch den Verbraucher maßgeblich ist oder die eindeutig auf die persönlichen Bedürfnisse des Verbrauchers zugeschnitten sind (§ 18 Abs. 1 Z 3 FAGG). Dies betrifft insbesondere Produkte aus der Kategorie „Individuell".
+          Das Widerrufsrecht besteht nicht bei Verträgen zur Lieferung von Waren, die nicht vorgefertigt sind und für deren Herstellung eine individuelle Auswahl oder Bestimmung durch den Verbraucher maßgeblich ist oder die eindeutig auf die persönlichen Bedürfnisse des Verbrauchers zugeschnitten sind (§ 18 Abs. 1 Z 3 FAGG). Dies betrifft insbesondere personalisierte Produkte (z. B. mit Namen oder Hausnummer) sowie Anfertigungen nach deiner Idee.
         </p>
 
         <h2 style={h2}>Muster-Widerrufsformular</h2>
