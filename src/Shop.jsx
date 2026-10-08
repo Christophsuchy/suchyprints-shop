@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { supabase } from "./supabaseClient";
 import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Loader2, Trash2, Sun, Moon, Truck, RotateCcw, ShieldCheck, ChevronDown, Tag, PenTool, Sparkles, Package, Mail, Star } from "lucide-react";
-import { CATEGORIES, MATERIALS, TAG_LABELS, DISCOUNT_CODES, FAQS, SHOP_OPEN, SHIPPING_RATES, formatPrice, parseCartKey, colorLabel, personalizeLabel, isShopProduct } from "./shopData";
+import { CATEGORIES, MATERIALS, TAG_LABELS, DISCOUNT_CODES, FAQS, SHOP_OPEN, SHIPPING_RATES, formatPrice, parseCartKey, colorLabel, personalizeLabel, isShopProduct, isReference } from "./shopData";
 import ProductIllustration from "./ProductIllustration";
 import { useProducts } from "./productStore";
+import { refKind, refPrefill } from "./ReferenceGallery";
 import { EMAILJS_SERVICE_ID, EMAILJS_PUBLIC_KEY, SHOP_OWNER_EMAIL, EMAILJS_ORDER_TEMPLATE_ID } from "./emailConfig";
 
 const EMAILJS_TEMPLATE_ID = EMAILJS_ORDER_TEMPLATE_ID;
@@ -963,6 +964,33 @@ export default function Shop() {
             </div>
           )}
         </section>
+
+        {/* Kundenprojekte – „Nach deiner Idee“ */}
+        {(() => {
+          const refs = PRODUCTS.filter((p) => isReference(p) && p.images?.length).slice(0, 4);
+          if (!refs.length || query) return null;
+          return (
+            <section style={{ maxWidth: 1080, margin: "0 auto", padding: "0 24px 48px" }}>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
+                <div>
+                  <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20, margin: 0 }}>Nach deiner Idee – schon umgesetzt</p>
+                  <p style={{ color: "var(--muted)", fontSize: 13.5, margin: "4px 0 0" }}>Ersatzteile, Logos und Sonderwünsche, die wir für Kunden gedruckt haben.</p>
+                </div>
+                <Link to="/anfrage" style={{ color: "var(--accent)", fontWeight: 600, fontSize: 14, textDecoration: "none" }}>Eigene Idee anfragen →</Link>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 12 }}>
+                {refs.map((p) => (
+                  <Link key={p.id} to="/anfrage" state={{ kind: refKind(p), prefill: refPrefill(p) }} className="sw-card" style={{ textDecoration: "none", color: "inherit" }}>
+                    <div style={{ aspectRatio: "1 / 1", overflow: "hidden", background: "#F7F4EF" }}>
+                      <img src={p.images[0]} alt={p.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                    </div>
+                    <p style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14, margin: 0, padding: "10px 10px 12px", lineHeight: 1.3 }}>{p.name}</p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          );
+        })()}
 
         {/* Versand-Infos */}
         <section style={{ maxWidth: 1080, margin: "0 auto", padding: "0 24px 48px" }}>

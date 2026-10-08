@@ -325,6 +325,19 @@ export default function ProductPage() {
           </div>
         </div>
 
+        {!(product.category === "individuell" && !pers) && (
+          <p style={{ marginTop: 28, fontSize: 13.5, color: "#7A7A82" }}>
+            {pers ? "Lieber ein eigenes Logo, eine andere Form oder Größe?" : "Andere Größe, Farbe oder eine Sonderanfertigung?"}{" "}
+            <Link
+              to="/anfrage"
+              state={{ kind: pers ? "Personalisiertes Geschenk" : "Etwas anderes", prefill: `Wie „${product.name}“, aber: ` }}
+              style={{ color: "#A85A32", fontWeight: 600 }}
+            >
+              Frag uns einfach →
+            </Link>
+          </p>
+        )}
+
         {related.length > 0 && (
           <div style={{ marginTop: 56 }}>
             <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 18, marginBottom: 16 }}>

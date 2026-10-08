@@ -1,12 +1,32 @@
 import React, { useEffect, useState } from "react";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { X, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { useProducts } from "./productStore";
 import { isReference } from "./shopData";
 
-// Beispielbilder bereits umgesetzter Kundenprojekte (im Dashboard: Kategorie „Kundenprojekt“)
-export default function ReferenceGallery() {
+// Passende Anfrage-Art zu einem Kundenprojekt (grob anhand von Name/Beschreibung)
+export function refKind(p) {
+  const t = `${p?.name || ""} ${p?.description || ""}`.toLowerCase();
+  if (/ersatz|kappe|halter|clip|klammer|abdeckung|teil|reparatur/.test(t)) return "Ersatzteil nach Foto oder Maß";
+  if (/logo|name|geschenk|schild|gravur|personal/.test(t)) return "Personalisiertes Geschenk";
+  if (/stl|3mf|modell|datei/.test(t)) return "Eigenes 3D-Modell drucken (STL/3MF)";
+  return "Etwas anderes";
+}
+export const refPrefill = (p) => `Ich hätte gern etwas Ähnliches wie „${p.name}“ aus eurer Galerie: `;
+export function useReferences() {
   const products = useProducts();
-  const refs = (products || []).filter((p) => isReference(p) && p.images?.length);
+  return (products || []).filter((p) => isReference(p) && p.images?.length);
+}
+
+// Beispielbilder bereits umgesetzter Kundenprojekte (im Dashboard: Kategorie „Kundenprojekt“)
+// onPick: auf der Anfrage-Seite – füllt das Formular direkt aus
+const pickBtn = {
+  marginTop: 14, display: "inline-flex", alignItems: "center", gap: 8, background: "linear-gradient(135deg, #C97A4E, #82431F)",
+  color: "#fff", border: "none", borderRadius: 999, padding: "11px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+};
+
+export default function ReferenceGallery({ onPick }) {
+  const refs = useReferences();
   const [open, setOpen] = useState(null); // { i: Projekt, j: Foto }
   const step = (d) => setOpen((o) => {
     if (!o) return o;
@@ -44,11 +64,20 @@ export default function ReferenceGallery() {
       {cur && (
         <div role="dialog" aria-modal="true" aria-label={cur.name} onClick={() => setOpen(null)}
           style={{ position: "fixed", inset: 0, background: "rgba(20,20,28,0.86)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ position: "relative", maxWidth: 760, width: "100%", background: "#fff", borderRadius: 16, overflow: "hidden" }}>
-            <img src={cur.images[open.j]} alt={cur.name} style={{ width: "100%", maxHeight: "70vh", objectFit: "contain", display: "block", background: "#F7F4EF" }} />
+          <div onClick={(e) => e.stopPropagation()} style={{ position: "relative", maxWidth: 760, width: "100%", maxHeight: "92vh", overflowY: "auto", background: "#fff", borderRadius: 16 }}>
+            <img src={cur.images[open.j]} alt={cur.name} style={{ width: "100%", maxHeight: "55vh", objectFit: "contain", display: "block", background: "#F7F4EF" }} />
             <div style={{ padding: "14px 18px 18px" }}>
               <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 18, margin: "0 0 6px" }}>{cur.name}</p>
               {cur.description && <p style={{ color: "#5C5763", fontSize: 14, lineHeight: 1.6, margin: 0 }}>{cur.description}</p>}
+              {onPick ? (
+                <button type="button" onClick={() => { onPick(cur); setOpen(null); }} style={pickBtn}>
+                  <Sparkles size={15} /> So etwas möchte ich auch
+                </button>
+              ) : (
+                <Link to="/anfrage" state={{ kind: refKind(cur), prefill: refPrefill(cur) }} style={{ ...pickBtn, textDecoration: "none" }}>
+                  <Sparkles size={15} /> So etwas möchte ich auch
+                </Link>
+              )}
             </div>
             <button type="button" aria-label="Schließen" onClick={() => setOpen(null)}
               style={{ position: "absolute", top: 10, right: 10, width: 36, height: 36, borderRadius: 999, border: "none", background: "rgba(255,255,255,0.92)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>

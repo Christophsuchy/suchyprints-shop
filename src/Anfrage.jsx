@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowLeft, Upload, X, Send, Loader2, Check, FileBox, Image as ImageIcon } from "lucide-react";
-import ReferenceGallery from "./ReferenceGallery";
+import ReferenceGallery, { refKind, refPrefill } from "./ReferenceGallery";
 
 const KINDS = ["Ersatzteil nach Foto oder Maß", "Eigenes 3D-Modell drucken (STL/3MF)", "Personalisiertes Geschenk", "Etwas anderes"];
 const MATERIALS = ["Egal / Empfehlung", "PLA", "PETG (robuster, hitzebeständiger)", "TPU (flexibel)"];
@@ -60,6 +60,11 @@ export default function Anfrage() {
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
   const set = (k) => (e) => setF((x) => ({ ...x, [k]: e.target.value }));
+  const formRef = useRef(null);
+  const pickReference = (p) => {
+    setF((x) => ({ ...x, kind: refKind(p), description: x.description.trim() ? x.description : refPrefill(p) }));
+    setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  };
   const total = files.reduce((s, x) => s + x.data.byteLength, 0);
 
   const addFiles = async (list) => {
@@ -127,7 +132,33 @@ export default function Anfrage() {
           Wir melden uns in der Regel innerhalb von 1–2 Werktagen mit Einschätzung und Preis. Die Anfrage ist unverbindlich.
         </p>
 
-        {!sent && <ReferenceGallery />}
+        {!sent && (
+          <div className="anf-steps">
+            {[
+              ["1", "Anfrage schicken", "Beschreib deine Idee – gern mit Fotos, Maßen oder 3D-Datei."],
+              ["2", "Angebot in 1–2 Tagen", "Du bekommst Preis und Lieferzeit per E-Mail. Unverbindlich."],
+              ["3", "Druck & Versand", "Passt alles, drucken wir dein Teil und schicken es dir zu."],
+            ].map(([n, t, d]) => (
+              <div key={n} className="anf-step">
+                <span className="anf-step-n">{n}</span>
+                <span>
+                  <span className="anf-step-t">{t}</span>
+                  <span className="anf-step-d">{d}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+        <style>{`
+          .anf-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0 0 26px; }
+          .anf-step { display: flex; gap: 10px; align-items: flex-start; background: #fff; border: 1px solid #E4DFD6; border-radius: 14px; padding: 14px 12px; }
+          .anf-step-n { flex-shrink: 0; width: 26px; height: 26px; border-radius: 999px; background: #A85A32; color: #fff; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; }
+          .anf-step-t { display: block; font-weight: 600; font-size: 13.5px; margin: 2px 0 3px; }
+          .anf-step-d { display: block; color: #7A7A82; font-size: 12.5px; line-height: 1.45; }
+          @media (max-width: 600px) { .anf-steps { grid-template-columns: 1fr; } }
+        `}</style>
+
+        {!sent && <ReferenceGallery onPick={pickReference} />}
 
         {sent ? (
           <div style={{ ...card, textAlign: "center", padding: "36px 24px" }}>
@@ -138,7 +169,7 @@ export default function Anfrage() {
             <p style={{ color: "#7A7A82", fontSize: 14.5, lineHeight: 1.6, margin: 0 }}>Du bekommst gleich eine Bestätigung per E-Mail. Wir melden uns bald bei dir.</p>
           </div>
         ) : (
-          <form onSubmit={submit}>
+          <form onSubmit={submit} ref={formRef} style={{ scrollMarginTop: 16 }}>
             <div style={card}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
                 <div><label style={label}>Name *</label><input value={f.name} onChange={set("name")} maxLength={80} style={field} /></div>
