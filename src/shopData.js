@@ -32,6 +32,15 @@ export const PERSONALIZE_FONTS = [
 
 // Warenkorb-Schlüssel: Produkt-ID plus gewählte Farben, z.B. "p23|schwarz" oder "p25|rot|gelb".
 // Personalisierte Produkte hängen Wunschtext (t:), Schrift (f:) und Zusatzangabe (x:) an, z.B. "p15|rot|t:Anna|f:modern".
+// Spruch-Vorschläge fürs Schlüsselbrett (Kunde kann auch eigenen Spruch schreiben)
+export const KEYBOARD_SAYINGS = [
+  "Hoam is, wo de Schlüssel hängan",
+  "Schlüssel weg? Ned mit uns.",
+  "Erst Schlüssel, dann Abflug",
+  "Wer suchet, der findet … hier",
+  "Nie wieder Schlüsselsuche",
+];
+
 export const cartKey = (id, colors = [], opts = {}) => {
   const parts = [id, ...colors];
   if (opts.text) parts.push("t:" + encodeURIComponent(opts.text));
@@ -56,6 +65,7 @@ function safeDecode(v) {
 }
 export const personalizeLabel = (product, { text, font, extra }) => {
   if (!product?.personalize || !text) return "";
+  if (product.personalize.type === "keyboard") return `Spruch „${text}“`;
   if (product.personalize.type === "housesign") return `Hausnummer ${extra || "?"} · „Familie ${text}“`;
   const f = PERSONALIZE_FONTS.find((x) => x.id === font);
   const bits = [`„${text}“`];

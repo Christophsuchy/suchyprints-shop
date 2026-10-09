@@ -89,6 +89,67 @@ function HouseSign({ nr, name, plate, ink, placeholder }) {
   );
 }
 
+
+// ---------- Schlüsselbrett mit Spruch (gleiches Layout wie der STL-Generator brett.py) ----------
+export function splitSaying(t) {
+  const words = t.trim().split(/\s+/).filter(Boolean);
+  if (words.join(" ").length <= 18 || words.length < 2) return [words.join(" ")];
+  let best = null;
+  for (let i = 1; i < words.length; i++) {
+    const a = words.slice(0, i).join(" "), b = words.slice(i).join(" "), d = Math.abs(a.length - b.length);
+    if (!best || d < best[0]) best = [d, [a, b]];
+  }
+  return best[1];
+}
+export function keyBoardLayout(text) {
+  const W = 220, TOP = 44, BOT = 2, lines = splitSaying(text), n = lines.length;
+  let size = Math.min(n === 1 ? 20 : 14, (TOP - BOT) / (n * 1.5 + 0.1));
+  while (Math.max(...lines.map((l) => textW(l, 700, size))) > W - 44 && size > 7) size *= 0.97;
+  const lh = size * 1.5, mid = (TOP + BOT) / 2;
+  return { W, H: 100, lines, size, ys: lines.map((_, i) => mid + ((n - 1) / 2) * lh - i * lh), ok: size > 7 };
+}
+function KeyBoard({ text, plate, ink, placeholder }) {
+  const [, setReady] = useState(0);
+  useEffect(() => {
+    if (typeof document === "undefined" || !document.fonts) return;
+    document.fonts.load("700 40px Poppins").then(() => setReady((x) => x + 1)).catch(() => {});
+  }, []);
+  const L = keyBoardLayout(text);
+  const s = 364 / L.W, cx = 200, cy = 180;
+  const X = (x) => cx + x * s, Y = (y) => cy - y * s;
+  const edge = shade(plate, -0.45), inkShadow = shade(ink, -0.35);
+  const op = placeholder ? 0.45 : 1;
+  const hooks = [-80, -40, 0, 40, 80];
+  const layer = (dx, dy, fill) => (
+    <g transform={`translate(${dx} ${dy})`} fill={fill} opacity={op}>
+      {L.lines.map((l, i) => (
+        <text key={i} x={X(0)} y={Y(L.ys[i])} textAnchor="middle" dominantBaseline="central" fontFamily="Poppins, sans-serif" fontWeight={700} fontSize={L.size * 1.38 * s}>{l}</text>
+      ))}
+      <rect x={X(-70)} y={Y(-9.2)} width={140 * s} height={1.2 * s} rx={0.6 * s} />
+    </g>
+  );
+  return (
+    <g>
+      <ellipse cx="200" cy={Y(-50) + 40} rx={L.W * s * 0.5} ry="14" fill="url(#floor)" />
+      <rect x={X(-L.W / 2) + 4} y={Y(50) + 7} width={L.W * s} height={100 * s} rx={8 * s} fill={edge} />
+      <rect x={X(-L.W / 2)} y={Y(50)} width={L.W * s} height={100 * s} rx={8 * s} fill={plate} />
+      <rect x={X(-L.W / 2)} y={Y(50)} width={L.W * s} height={100 * s} rx={8 * s} fill="url(#layers)" />
+      {layer(1.4, 2, inkShadow)}
+      {layer(0, 0, ink)}
+      {hooks.map((x) => (
+        <g key={x}>
+          <rect x={X(x - 5) + 3} y={Y(-31 + 13) + 9} width={10 * s} height={15 * s} rx={2.2 * s} fill="rgba(0,0,0,0.28)" />
+          <rect x={X(x - 5) + 1.5} y={Y(-31 + 13) + 3} width={10 * s} height={15 * s} rx={2.2 * s} fill={inkShadow} />
+          <rect x={X(x - 5)} y={Y(-31 + 13)} width={10 * s} height={15 * s} rx={2.2 * s} fill={ink} />
+        </g>
+      ))}
+      <text x="200" y={Y(-50) + 64} textAnchor="middle" fontFamily="Inter, sans-serif" fontSize="12.5" fill={L.ok ? "#7A7A82" : "#A32D2D"}>
+        {L.ok ? "ca. 22 × 10 cm · 5 Haken" : "Spruch zu lang – bitte kürzen"}
+      </text>
+    </g>
+  );
+}
+
 export default function PersonalizePreview({ product, colorCss, colorCss2, text, fontId, extra }) {
   const type = product.personalize?.type;
   const base = colorCss && colorCss.startsWith("#") ? colorCss : "#8a8d91";
@@ -167,6 +228,15 @@ export default function PersonalizePreview({ product, colorCss, colorCss2, text,
             plate={colorCss && colorCss.startsWith("#") ? colorCss : "#3A3C42"}
             ink={colorCss2 && colorCss2.startsWith("#") ? colorCss2 : "#EEECE6"}
             placeholder={!text?.trim() && !extra?.trim()}
+          />
+        )}
+
+        {type === "keyboard" && (
+          <KeyBoard
+            text={text?.trim() || "Hoam is, wo de Schlüssel hängan"}
+            plate={colorCss && colorCss.startsWith("#") ? colorCss : "#2B2E4A"}
+            ink={colorCss2 && colorCss2.startsWith("#") ? colorCss2 : "#EEECE6"}
+            placeholder={!text?.trim()}
           />
         )}
 

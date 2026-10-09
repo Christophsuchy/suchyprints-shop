@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Plus, Check } from "lucide-react";
-import { MATERIALS, PERSONALIZE_FONTS, formatPrice, cartKey, isReference, isShopProduct } from "./shopData";
+import { MATERIALS, PERSONALIZE_FONTS, formatPrice, cartKey, isReference, isShopProduct, KEYBOARD_SAYINGS } from "./shopData";
 import { useProducts } from "./productStore";
 import PersonalizePreview from "./PersonalizePreview";
 import { Logo } from "./Shop";
@@ -106,7 +106,7 @@ export default function ProductPage() {
             <div style={{ position: "relative" }}>
               <PersonalizePreview
                 product={product}
-                colorCss={(product.colors || []).find((c) => c.id === picks[0])?.css || (pers.type === "housesign" ? "#3A3C42" : "#8a8d91")}
+                colorCss={(product.colors || []).find((c) => c.id === picks[0])?.css || (pers.type === "housesign" ? "#3A3C42" : pers.type === "keyboard" ? "#2B2E4A" : "#8a8d91")}
                 colorCss2={(product.colors || []).find((c) => c.id === picks[1])?.css}
                 text={pText}
                 fontId={pFont}
@@ -198,7 +198,21 @@ export default function ProductPage() {
                   placeholder="Hier eintippen …"
                   style={{ width: "100%", border: "1px solid #D9D2C8", borderRadius: 10, padding: "11px 14px", fontSize: 15, outline: "none", background: "#fff", color: "#2B2E4A", fontFamily: "'Inter', sans-serif" }}
                 />
-                {pers.type !== "housesign" && (<>
+                {pers.type === "keyboard" && (
+                  <div style={{ marginTop: 12 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, margin: "0 0 8px" }}>Oder einen Spruch auswählen</p>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      {KEYBOARD_SAYINGS.map((t) => (
+                        <button key={t} type="button" aria-pressed={pText === t} onClick={() => { setPText(t.slice(0, pers.maxLength)); setAdded(false); }}
+                          style={{ fontSize: 13, padding: "7px 12px", borderRadius: 999, cursor: "pointer", fontFamily: "'Inter', sans-serif",
+                            background: pText === t ? "#2B2E4A" : "#fff", color: pText === t ? "#fff" : "#2B2E4A", border: pText === t ? "1px solid #2B2E4A" : "1px solid #D9D2C8" }}>
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {!["housesign", "keyboard"].includes(pers.type) && (<>
                 <p style={{ fontSize: 13, fontWeight: 600, margin: "14px 0 8px" }}>Schrift</p>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {PERSONALIZE_FONTS.map((f) => (
@@ -241,7 +255,7 @@ export default function ProductPage() {
                   return (
                     <div key={slot} style={{ marginBottom: 14 }}>
                       <p style={{ fontSize: 13, fontWeight: 600, margin: "0 0 8px" }}>
-                        {pers?.type === "housesign" && colorCount > 1 ? (slot === 0 ? "Farbe Platte" : "Farbe Schrift") : colorCount > 1 ? `Farbe ${slot + 1}` : "Farbe"}
+                        {pers?.type === "keyboard" && colorCount > 1 ? (slot === 0 ? "Farbe Platte" : "Farbe Spruch & Haken") : pers?.type === "housesign" && colorCount > 1 ? (slot === 0 ? "Farbe Platte" : "Farbe Schrift") : colorCount > 1 ? `Farbe ${slot + 1}` : "Farbe"}
                         <span style={{ fontWeight: 400, color: "#7A7A82" }}>{chosen ? ` – ${chosen.label}` : " – bitte wählen"}</span>
                       </p>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>

@@ -19,9 +19,11 @@ const PERS_TYPES = [
   { id: "bowl", label: "Napf-Untersteller" },
   { id: "penholder", label: "Stiftehalter" },
   { id: "housesign", label: "Hausnummer-Schild (Nummer + Name, 2 Farben)" },
+  { id: "keyboard", label: "Schlüsselbrett mit Spruch (2 Farben)" },
 ];
 const PERS_PRESETS = {
   housesign: { label: "Familienname", maxLength: 18, extraLabel: "Hausnummer", extraPlaceholder: "z. B. 12 oder 7b" },
+  keyboard: { label: "Spruch", maxLength: 40, extraLabel: "", extraPlaceholder: "" },
 };
 
 async function shrink(file) {
@@ -194,7 +196,7 @@ function Editor({ row, onClose, onSaved, onDeleted }) {
           )}
           <div>
             <label style={lbl}>Personalisierung</label>
-            <select value={pers?.type || ""} onChange={(e) => setD((x) => ({ ...x, personalize: e.target.value ? { label: "Wunschtext", maxLength: 12, ...(x.personalize || {}), ...(PERS_PRESETS[e.target.value] || {}), type: e.target.value } : null, ...(e.target.value === "housesign" ? { colorCount: 2 } : {}) }))} style={inp}>
+            <select value={pers?.type || ""} onChange={(e) => setD((x) => ({ ...x, personalize: e.target.value ? { label: "Wunschtext", maxLength: 12, ...(x.personalize || {}), ...(PERS_PRESETS[e.target.value] || {}), type: e.target.value } : null, ...(["housesign", "keyboard"].includes(e.target.value) ? { colorCount: 2 } : {}) }))} style={inp}>
               {PERS_TYPES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
             </select>
           </div>
