@@ -152,6 +152,57 @@ function KeyBoard({ text, plate, ink, placeholder }) {
   );
 }
 
+
+// ---------- Pflanzenstecker-Set (gleiches Layout wie der STL-Generator stecker.py) ----------
+export const parseNames = (t) => (t || "").split(",").map((x) => x.trim()).filter(Boolean);
+export function plantHeadW(name) {
+  let size = 6.5;
+  while (14.5 + textW(name, 700, size) + 6 > 84 && size > 5) size *= 0.97;
+  return { W: Math.max(44, 14.5 + textW(name, 700, size) + 6), size, ok: size > 5 };
+}
+function PlantMarkers({ names, maxNames, body, ink, placeholder }) {
+  const [, setReady] = useState(0);
+  useEffect(() => {
+    if (typeof document === "undefined" || !document.fonts) return;
+    document.fonts.load("700 40px Poppins").then(() => setReady((x) => x + 1)).catch(() => {});
+  }, []);
+  const shown = names.slice(0, 3), edge = shade(body, -0.4), op = placeholder ? 0.5 : 1;
+  const Ws = shown.map((n) => plantHeadW(n).W), gap = 8;
+  const s = Math.min(1.9, 372 / (Ws.reduce((a, b) => a + b, 0) + gap * (shown.length - 1)));
+  const total = (Ws.reduce((a, b) => a + b, 0) + gap * (shown.length - 1)) * s;
+  let acc = 200 - total / 2;
+  const xs = Ws.map((w) => { const c = acc + (w * s) / 2; acc += (w + gap) * s; return c; });
+  const tops = shown.length === 1 ? [90] : [92, 66, 104];
+  const tooMany = names.length > maxNames;
+  const tooLong = names.some((n) => !plantHeadW(n).ok);
+  return (
+    <g>
+      <ellipse cx="200" cy="318" rx="170" ry="14" fill="url(#floor)" />
+      {shown.map((n, k) => {
+        const { W, size } = plantHeadW(n), cx = xs[k], top = tops[k], hw = W * s, hh = 18 * s;
+        const stakeTop = top + hh / 2, tip = top + hh / 2 + 88 * s;
+        const stake = `M ${cx - 3.5 * s} ${stakeTop} L ${cx + 3.5 * s} ${stakeTop} L ${cx + 2 * s} ${tip - 8 * s} L ${cx} ${tip} L ${cx - 2 * s} ${tip - 8 * s} Z`;
+        const lx = cx - hw / 2 + 8 * s, ly = top + hh / 2;
+        return (
+          <g key={k} opacity={op}>
+            <path d={stake} fill={edge} transform="translate(2.5 2)" />
+            <rect x={cx - hw / 2 + 2.5} y={top + 2} width={hw} height={hh} rx={hh / 2} fill={edge} />
+            <path d={stake} fill={body} />
+            <rect x={cx - hw / 2} y={top} width={hw} height={hh} rx={hh / 2} fill={body} />
+            <rect x={cx - hw / 2} y={top} width={hw} height={hh} rx={hh / 2} fill="url(#layers)" />
+            <ellipse cx={lx} cy={ly} rx={4.5 * s} ry={2.6 * s} fill={ink} transform={`rotate(-40 ${lx} ${ly})`} />
+            <line x1={lx - 2.6 * s} y1={ly + 2 * s} x2={lx + 2.6 * s} y2={ly - 2 * s} stroke={body} strokeWidth={0.7 * s} />
+            <text x={cx - hw / 2 + (14.5 + (W - 14.5 - 6) / 2) * s} y={ly + 0.6} textAnchor="middle" dominantBaseline="central" fontFamily="Poppins, sans-serif" fontWeight={700} fontSize={size * 1.38 * s} fill={ink}>{n}</text>
+          </g>
+        );
+      })}
+      <text x="200" y="352" textAnchor="middle" fontFamily="Inter, sans-serif" fontSize="12.5" fill={tooMany || tooLong ? "#A32D2D" : "#7A7A82"}>
+        {tooLong ? "Ein Name ist zu lang – bitte kürzen" : tooMany ? `Bitte höchstens ${maxNames} Namen` : `${names.length} von ${maxNames} Namen${names.length > 3 ? ` · +${names.length - 3} weitere` : ""} · Stecker ca. 10,6 cm`}
+      </text>
+    </g>
+  );
+}
+
 export default function PersonalizePreview({ product, colorCss, colorCss2, text, fontId, extra }) {
   const type = product.personalize?.type;
   const base = colorCss && colorCss.startsWith("#") ? colorCss : "#8a8d91";
@@ -239,6 +290,16 @@ export default function PersonalizePreview({ product, colorCss, colorCss2, text,
             plate={colorCss && colorCss.startsWith("#") ? colorCss : "#2B2E4A"}
             ink={colorCss2 && colorCss2.startsWith("#") ? colorCss2 : "#EEECE6"}
             placeholder={!text?.trim()}
+          />
+        )}
+
+        {type === "plantmarkers" && (
+          <PlantMarkers
+            names={parseNames(text).length ? parseNames(text) : ["Basilikum", "Rosmarin", "Minze"]}
+            maxNames={product.personalize?.maxNames || 6}
+            body={colorCss && colorCss.startsWith("#") ? colorCss : "#5E7461"}
+            ink={colorCss2 && colorCss2.startsWith("#") ? colorCss2 : "#F2EFE8"}
+            placeholder={!parseNames(text).length}
           />
         )}
 

@@ -65,6 +65,7 @@ function safeDecode(v) {
 }
 export const personalizeLabel = (product, { text, font, extra }) => {
   if (!product?.personalize || !text) return "";
+  if (product.personalize.type === "plantmarkers") return `Pflanzenstecker: ${text}`;
   if (product.personalize.type === "keyboard") return `Spruch „${text}“`;
   if (product.personalize.type === "housesign") return `Hausnummer ${extra || "?"} · „Familie ${text}“`;
   const f = PERSONALIZE_FONTS.find((x) => x.id === font);

@@ -106,7 +106,7 @@ export default function ProductPage() {
             <div style={{ position: "relative" }}>
               <PersonalizePreview
                 product={product}
-                colorCss={(product.colors || []).find((c) => c.id === picks[0])?.css || (pers.type === "housesign" ? "#3A3C42" : pers.type === "keyboard" ? "#2B2E4A" : "#8a8d91")}
+                colorCss={(product.colors || []).find((c) => c.id === picks[0])?.css || (pers.type === "housesign" ? "#3A3C42" : pers.type === "keyboard" ? "#2B2E4A" : pers.type === "plantmarkers" ? "#5E7461" : "#8a8d91")}
                 colorCss2={(product.colors || []).find((c) => c.id === picks[1])?.css}
                 text={pText}
                 fontId={pFont}
@@ -218,7 +218,10 @@ export default function ProductPage() {
                     )}
                   </div>
                 )}
-                {!["housesign", "keyboard"].includes(pers.type) && (<>
+                {pers.type === "plantmarkers" && (
+                  <p style={{ fontSize: 12.5, color: "#7A7A82", margin: "8px 0 0" }}>z. B. „Basilikum, Thymian, Minze“ – bis zu {pers.maxNames || 6} Namen, je Stecker ein Name.</p>
+                )}
+                {!["housesign", "keyboard", "plantmarkers"].includes(pers.type) && (<>
                 <p style={{ fontSize: 13, fontWeight: 600, margin: "14px 0 8px" }}>Schrift</p>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {PERSONALIZE_FONTS.map((f) => (
@@ -261,7 +264,7 @@ export default function ProductPage() {
                   return (
                     <div key={slot} style={{ marginBottom: 14 }}>
                       <p style={{ fontSize: 13, fontWeight: 600, margin: "0 0 8px" }}>
-                        {pers?.type === "keyboard" && colorCount > 1 ? (slot === 0 ? "Farbe Platte" : "Farbe Spruch & Haken") : pers?.type === "housesign" && colorCount > 1 ? (slot === 0 ? "Farbe Platte" : "Farbe Schrift") : colorCount > 1 ? `Farbe ${slot + 1}` : "Farbe"}
+                        {pers?.type === "plantmarkers" && colorCount > 1 ? (slot === 0 ? "Farbe Stecker" : "Farbe Schrift") : pers?.type === "keyboard" && colorCount > 1 ? (slot === 0 ? "Farbe Platte" : "Farbe Spruch & Haken") : pers?.type === "housesign" && colorCount > 1 ? (slot === 0 ? "Farbe Platte" : "Farbe Schrift") : colorCount > 1 ? `Farbe ${slot + 1}` : "Farbe"}
                         <span style={{ fontWeight: 400, color: "#7A7A82" }}>{chosen ? ` – ${chosen.label}` : " – bitte wählen"}</span>
                       </p>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
