@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useId } from "react";
 import { Link } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { supabase } from "./supabaseClient";
-import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Loader2, Trash2, Sun, Moon, Truck, RotateCcw, ShieldCheck, ChevronDown, Tag, PenTool, Sparkles, Package, Mail, Star } from "lucide-react";
+import { ShoppingCart, Plus, Minus, X, Search, Layers, Cog, Gamepad2, Home, Wand2, Send, Loader2, Trash2, Sun, Moon, Truck, RotateCcw, ShieldCheck, ChevronDown, Tag, PenTool, Sparkles, Package, Mail, Star, Wrench, ArrowRight } from "lucide-react";
 import { CATEGORIES, MATERIALS, TAG_LABELS, DISCOUNT_CODES, FAQS, SHOP_OPEN, SHIPPING_RATES, formatPrice, parseCartKey, colorLabel, personalizeLabel, isShopProduct, isReference } from "./shopData";
 import ProductIllustration from "./ProductIllustration";
 import { useProducts } from "./productStore";
@@ -453,6 +453,13 @@ export default function Shop() {
           transition: clip-path 1.1s cubic-bezier(.16,1,.3,1);
         }
         .sw-hero-reveal.ready { clip-path: inset(0 0 0 0); }
+        .sw-et-banner { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; text-decoration: none; color: #F2EFE8; background: #2B2E4A; border-radius: 18px; padding: 22px 24px; transition: transform .15s; }
+        .sw-et-banner:hover { transform: translateY(-1px); }
+        .sw-et-banner:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+        .sw-et-icon { width: 48px; height: 48px; border-radius: 14px; background: rgba(255,255,255,0.1); color: #F2B394; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .sw-et-title { display: block; font-family: var(--font-display); font-weight: 700; font-size: 20px; }
+        .sw-et-sub { display: block; color: #C9C7D4; font-size: 13.5px; line-height: 1.45; margin-top: 3px; }
+        .sw-et-go { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, var(--accent-soft), var(--accent-dark)); color: #fff; border-radius: 999px; padding: 11px 18px; font-weight: 600; font-size: 14px; white-space: nowrap; }
         .sw-mode-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -965,6 +972,20 @@ export default function Shop() {
           )}
         </section>
 
+        {/* Ersatzteil-Service */}
+        {!query && (
+          <section style={{ maxWidth: 1080, margin: "0 auto", padding: "0 24px 40px" }}>
+            <Link to="/ersatzteil" className="sw-et-banner">
+              <span className="sw-et-icon"><Wrench size={22} /></span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span className="sw-et-title">Kaputt? Wir drucken's nach.</span>
+                <span className="sw-et-sub">Knopf abgebrochen, Deckel verloren, Clip gerissen – Foto schicken, wir konstruieren das Ersatzteil nach.</span>
+              </span>
+              <span className="sw-et-go">Ersatzteil-Service <ArrowRight size={15} /></span>
+            </Link>
+          </section>
+        )}
+
         {/* Kundenprojekte – „Nach deiner Idee“ */}
         {(() => {
           const refs = PRODUCTS.filter((p) => isReference(p) && p.images?.length).slice(0, 4);
@@ -1222,6 +1243,7 @@ export default function Shop() {
               <Link to="/datenschutz" style={{ color: "var(--muted)", fontSize: 12.5, textDecoration: "none" }}>Datenschutz</Link>
               <Link to="/agb" style={{ color: "var(--muted)", fontSize: 12.5, textDecoration: "none" }}>AGB</Link>
               <Link to="/widerruf" style={{ color: "var(--muted)", fontSize: 12.5, textDecoration: "none" }}>Widerruf</Link>
+              <Link to="/ersatzteil" style={{ color: "var(--muted)", fontSize: 12.5, textDecoration: "none" }}>Ersatzteil-Service</Link>
               <Link to="/kontakt" style={{ color: "var(--muted)", fontSize: 12.5, textDecoration: "none" }}>Kontakt</Link>
             </div>
           </div>

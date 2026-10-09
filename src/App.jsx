@@ -11,6 +11,7 @@ import ProductPage from "./ProductPage";
 import Kontakt from "./Kontakt";
 import Bewertung from "./Bewertung";
 import Anfrage from "./Anfrage";
+import Ersatzteil from "./Ersatzteil";
 import CookieBanner from "./CookieBanner";
 
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="/kontakt" element={<Kontakt />} />
         <Route path="/bewertung/:token" element={<Bewertung />} />
         <Route path="/anfrage" element={<Anfrage />} />
+        <Route path="/ersatzteil" element={<Ersatzteil />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <CookieBanner />

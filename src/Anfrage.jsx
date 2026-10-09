@@ -206,6 +206,12 @@ export default function Anfrage() {
 
             <div style={card}>
               <label style={label}>Fotos, Skizzen oder 3D-Dateien</label>
+              {f.kind === KINDS[0] && (
+                <p style={{ fontSize: 13, color: "#5C5763", lineHeight: 1.55, background: "#FFF6EF", border: "1px solid #F0D9C6", borderRadius: 10, padding: "10px 12px", margin: "0 0 12px" }}>
+                  <b>Tipp fürs Ersatzteil:</b> Fotos von mehreren Seiten, mit Lineal oder Münze daneben – und ein Foto vom Einbauort.{" "}
+                  <Link to="/ersatzteil" style={{ color: "#A85A32", fontWeight: 600 }}>Mehr Tipps</Link>
+                </p>
+              )}
               <label
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => { e.preventDefault(); addFiles(e.dataTransfer.files); }}
