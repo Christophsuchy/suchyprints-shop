@@ -96,7 +96,9 @@ export function splitSaying(t) {
   if (words.join(" ").length <= 18 || words.length < 2) return [words.join(" ")];
   let best = null;
   for (let i = 1; i < words.length; i++) {
-    const a = words.slice(0, i).join(" "), b = words.slice(i).join(" "), d = Math.abs(a.length - b.length);
+    const a = words.slice(0, i).join(" "), b = words.slice(i).join(" ");
+    // ausgewogen, aber lieber nach „–“, „:“ oder „,“ umbrechen und nie eine Zeile mit „–“ beginnen
+    const d = Math.abs(a.length - b.length) + (/^[–-]/.test(b) ? 100 : 0) - (/[–:-]$/.test(a) ? 10 : /,$/.test(a) ? 4 : 0);
     if (!best || d < best[0]) best = [d, [a, b]];
   }
   return best[1];

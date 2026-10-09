@@ -33,12 +33,12 @@ export const PERSONALIZE_FONTS = [
 // Warenkorb-Schlüssel: Produkt-ID plus gewählte Farben, z.B. "p23|schwarz" oder "p25|rot|gelb".
 // Personalisierte Produkte hängen Wunschtext (t:), Schrift (f:) und Zusatzangabe (x:) an, z.B. "p15|rot|t:Anna|f:modern".
 // Spruch-Vorschläge fürs Schlüsselbrett (Kunde kann auch eigenen Spruch schreiben)
+// names: true = enthält Beispielnamen, die der Kunde im Feld ändern soll
 export const KEYBOARD_SAYINGS = [
-  "Hoam is, wo de Schlüssel hängan",
-  "Schlüssel weg? Ned mit uns.",
-  "Erst Schlüssel, dann Abflug",
-  "Wer suchet, der findet … hier",
-  "Nie wieder Schlüsselsuche",
+  { group: "Steirisch", items: [{ text: "Hoam is, wo de Schlüssel hängan" }, { text: "Ned suachn – do hängans" }] },
+  { group: "Pärchen", items: [{ text: "Anna & Max – unsere Schlüssel", names: true }, { text: "Zwei Herzen, ein Schlüsselbrett" }] },
+  { group: "Familie", items: [{ text: "Familie Huber – alle Schlüssel hier!", names: true }, { text: "Jeder Schlüssel hat sein Platzerl" }] },
+  { group: "Lustig", items: [{ text: "Schlüssel hier – Ausreden woanders" }, { text: "Bevor du fragst: Sie hängen hier." }] },
 ];
 
 export const cartKey = (id, colors = [], opts = {}) => {

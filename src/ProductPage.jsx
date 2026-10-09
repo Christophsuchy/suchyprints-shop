@@ -201,15 +201,21 @@ export default function ProductPage() {
                 {pers.type === "keyboard" && (
                   <div style={{ marginTop: 12 }}>
                     <p style={{ fontSize: 13, fontWeight: 600, margin: "0 0 8px" }}>Oder einen Spruch auswählen</p>
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {KEYBOARD_SAYINGS.map((t) => (
-                        <button key={t} type="button" aria-pressed={pText === t} onClick={() => { setPText(t.slice(0, pers.maxLength)); setAdded(false); }}
-                          style={{ fontSize: 13, padding: "7px 12px", borderRadius: 999, cursor: "pointer", fontFamily: "'Inter', sans-serif",
-                            background: pText === t ? "#2B2E4A" : "#fff", color: pText === t ? "#fff" : "#2B2E4A", border: pText === t ? "1px solid #2B2E4A" : "1px solid #D9D2C8" }}>
-                          {t}
-                        </button>
-                      ))}
-                    </div>
+                    {KEYBOARD_SAYINGS.map((g) => (
+                      <div key={g.group} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 8 }}>
+                        <span style={{ fontSize: 12, color: "#7A7A82", width: 64, flexShrink: 0 }}>{g.group}</span>
+                        {g.items.map(({ text: t }) => (
+                          <button key={t} type="button" aria-pressed={pText === t} onClick={() => { setPText(t.slice(0, pers.maxLength)); setAdded(false); }}
+                            style={{ fontSize: 13, padding: "7px 12px", borderRadius: 999, cursor: "pointer", fontFamily: "'Inter', sans-serif",
+                              background: pText === t ? "#2B2E4A" : "#fff", color: pText === t ? "#fff" : "#2B2E4A", border: pText === t ? "1px solid #2B2E4A" : "1px solid #D9D2C8" }}>
+                            {t}
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                    {KEYBOARD_SAYINGS.some((g) => g.items.some((x) => x.names && x.text === pText)) && (
+                      <p style={{ fontSize: 12.5, color: "#A85A32", margin: "4px 0 0" }}>Tipp: Ändere die Namen oben im Feld auf eure eigenen.</p>
+                    )}
                   </div>
                 )}
                 {!["housesign", "keyboard"].includes(pers.type) && (<>
