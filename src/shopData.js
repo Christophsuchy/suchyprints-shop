@@ -98,7 +98,7 @@ export const STATIC_REFERENCES = [
     id: "ref-handgas-traktor",
     category: "referenz",
     name: "Handgas-Griff für Traktor – Ersatzteil",
-    description: "Der Griff vom Handgashebel war kaputt und als Ersatzteil nicht mehr zu bekommen. Nach Maß nachkonstruiert und gedruckt – sitzt wie das Original und hält im Alltag.",
+    description: "Der Griff vom Handgashebel war kaputt und als Ersatzteil nicht mehr zu bekommen. Nach Maß nachkonstruiert und aus TPU gedruckt – das ist flexibel und griffig, fühlt sich also fast wie Gummi an. Sitzt wie das Original und hält im Alltag.",
     images: ["/referenzen/handgas-traktor-1.webp", "/referenzen/handgas-traktor-2.webp", "/referenzen/handgas-traktor-3.webp"],
     static: true,
   },
