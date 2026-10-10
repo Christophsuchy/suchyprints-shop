@@ -4,6 +4,7 @@ import { LogOut, Check, Clock, Loader2, Truck, Star, Eye, EyeOff, RefreshCw } fr
 import ProductsAdmin from "./admin/ProductsAdmin";
 import RequestsAdmin from "./admin/RequestsAdmin";
 import StatsAdmin from "./admin/StatsAdmin";
+import KalkulationAdmin from "./admin/KalkulationAdmin";
 
 function formatPrice(n) {
   return Number(n).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
@@ -166,6 +167,7 @@ export default function Dashboard() {
             ["orders", `Bestellungen${openOrders ? ` (${openOrders})` : ""}`],
             ["requests", `Anfragen${openRequests ? ` (${openRequests})` : ""}`],
             ["products", "Produkte"],
+            ["calc", "Kalkulation"],
             ["reviews", `Bewertungen${pendingReviews ? ` (${pendingReviews})` : ""}`],
             ["stats", "Kennzahlen"],
           ].map(([id, label]) => (
@@ -178,6 +180,8 @@ export default function Dashboard() {
 
         {tab === "products" ? (
           <ProductsAdmin />
+        ) : tab === "calc" ? (
+          <KalkulationAdmin />
         ) : tab === "requests" ? (
           <RequestsAdmin onCount={() => supabase.from("requests").select("id, status").then(({ data }) => data && setRequests(data))} />
         ) : loading ? (

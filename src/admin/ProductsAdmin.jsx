@@ -232,7 +232,7 @@ export default function ProductsAdmin() {
     const { data, error } = await supabase.from("products").select("*").order("sort", { ascending: true });
     if (error) { setErr(error.message); setRows([]); return; }
     setErr("");
-    setRows(data);
+    setRows(data.filter((r) => !String(r.id).startsWith("_"))); // "_kalkulation" = Grundwerte der Preiskalkulation, kein Produkt
   };
   useEffect(() => { load(); }, []);
 
