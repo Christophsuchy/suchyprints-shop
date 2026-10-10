@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
-import { PRODUCTS as STATIC_PRODUCTS, FIDGET_COLORS, SOLID_COLORS } from "./shopData";
+import { PRODUCTS as STATIC_PRODUCTS, STATIC_REFERENCES, FIDGET_COLORS, SOLID_COLORS } from "./shopData";
 
 // Produkte kommen aus Supabase (Tabelle "products", im Dashboard bearbeitbar).
 // Ist die Tabelle leer oder nicht erreichbar, nutzt der Shop das Sortiment aus shopData.js.
@@ -27,6 +27,12 @@ export function productFromRow(row) {
 }
 
 let cache = null;
+
+// fest eingebaute Kundenprojekte vorne einreihen (nicht doppelt, falls gleiche id im Dashboard angelegt wird)
+function withStaticRefs(list) {
+  const ids = new Set(list.map((p) => p.id));
+  return [...STATIC_REFERENCES.filter((r) => !ids.has(r.id)), ...list];
+}
 let pending = null;
 
 export function loadProducts(force = false) {
@@ -38,10 +44,10 @@ export function loadProducts(force = false) {
     timeout,
   ])
     .then((res) => {
-      cache = !res?.error && res?.data?.length ? res.data.map(productFromRow) : STATIC_PRODUCTS;
+      cache = withStaticRefs(!res?.error && res?.data?.length ? res.data.map(productFromRow) : STATIC_PRODUCTS);
       return cache;
     })
-    .catch(() => (cache = STATIC_PRODUCTS))
+    .catch(() => (cache = withStaticRefs(STATIC_PRODUCTS)))
     .finally(() => { pending = null; });
   return pending;
 }

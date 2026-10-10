@@ -91,6 +91,18 @@ export const CATEGORIES = [
 // - Dienstleistungen (category "individuell" ohne Personalisierung, z. B. Ersatzteil) laufen über das Anfrage-Formular
 // - alles andere sind bestellbare Produkte, personalisierbare eingeschlossen
 export const isReference = (p) => p?.category === "referenz";
+
+// Fest eingebaute Kundenprojekte (zusätzlich zu denen aus dem Dashboard, erscheinen zuerst)
+export const STATIC_REFERENCES = [
+  {
+    id: "ref-handgas-traktor",
+    category: "referenz",
+    name: "Handgas-Griff für Traktor – Ersatzteil",
+    description: "Der Griff vom Handgashebel war kaputt und als Ersatzteil nicht mehr zu bekommen. Nach Maß nachkonstruiert und gedruckt – sitzt wie das Original und hält im Alltag.",
+    images: ["/referenzen/handgas-traktor-1.webp", "/referenzen/handgas-traktor-2.webp", "/referenzen/handgas-traktor-3.webp"],
+    static: true,
+  },
+];
 export const isService = (p) => p?.category === "individuell" && !p?.personalize;
 export const isShopProduct = (p) => !!p && !isReference(p) && !isService(p);
 
