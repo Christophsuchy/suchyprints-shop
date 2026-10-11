@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Plus, Check } from "lucide-react";
-import { MATERIALS, PERSONALIZE_FONTS, formatPrice, cartKey, isReference, isShopProduct, KEYBOARD_SAYINGS } from "./shopData";
+import { MATERIALS, PERSONALIZE_FONTS, NAMESTAND_STYLES, formatPrice, cartKey, isReference, isShopProduct, KEYBOARD_SAYINGS } from "./shopData";
 import { useProducts } from "./productStore";
 import PersonalizePreview from "./PersonalizePreview";
 import { Logo } from "./Shop";
@@ -23,6 +23,7 @@ export default function ProductPage() {
   const pers = product?.personalize;
   // Beim Wechsel zu einem anderen Produkt Auswahl zurücksetzen
   useEffect(() => { setPicks([]); setSel(0); setAdded(false); setPText(""); setPExtra(""); setPFont(PERSONALIZE_FONTS[0].id); }, [id]);
+  useEffect(() => { if (pers?.type === "namestand" && !NAMESTAND_STYLES.some((f) => f.id === pFont)) setPFont("block"); }, [pers?.type, pFont]);
   const pickedColors = !colorCount || (picks.length === colorCount && picks.every(Boolean));
   const persComplete = !pers || (pText.trim().length > 0 && (!pers.extraLabel || pExtra.trim().length > 0));
   const pickedAll = pickedColors && persComplete;
@@ -218,10 +219,25 @@ export default function ProductPage() {
                     )}
                   </div>
                 )}
+                {pers.type === "namestand" && (
+                  <div style={{ marginTop: 14 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, margin: "0 0 8px" }}>Schrift</p>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      {NAMESTAND_STYLES.map((f) => (
+                        <button key={f.id} type="button" aria-pressed={pFont === f.id} onClick={() => { setPFont(f.id); setAdded(false); }}
+                          style={{ fontFamily: f.css, fontSize: f.id === "block" ? 16 : 15, padding: "8px 16px", borderRadius: 999, cursor: "pointer", letterSpacing: f.id === "block" ? "0.04em" : 0,
+                            background: pFont === f.id ? "#2B2E4A" : "#fff", color: pFont === f.id ? "#fff" : "#2B2E4A", border: pFont === f.id ? "1px solid #2B2E4A" : "1px solid #D9D2C8" }}>
+                          {f.id === "block" ? "BLOCK" : "Schreibschrift"}
+                        </button>
+                      ))}
+                    </div>
+                    <p style={{ fontSize: 12.5, color: "#7A7A82", margin: "8px 0 0" }}>Der ganze Ständer besteht aus deinem Namen – das Handy lehnt an den Buchstaben. Am besten bis 10 Buchstaben.</p>
+                  </div>
+                )}
                 {pers.type === "plantmarkers" && (
                   <p style={{ fontSize: 12.5, color: "#7A7A82", margin: "8px 0 0" }}>z. B. „Basilikum, Thymian, Minze“ – bis zu {pers.maxNames || 6} Namen, je Stecker ein Name.</p>
                 )}
-                {!["housesign", "keyboard", "plantmarkers"].includes(pers.type) && (<>
+                {!["housesign", "keyboard", "plantmarkers", "namestand"].includes(pers.type) && (<>
                 <p style={{ fontSize: 13, fontWeight: 600, margin: "14px 0 8px" }}>Schrift</p>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {PERSONALIZE_FONTS.map((f) => (

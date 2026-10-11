@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { PERSONALIZE_FONTS } from "./shopData";
+import { PERSONALIZE_FONTS, NAMESTAND_STYLES } from "./shopData";
 
 // Live-Vorschau für personalisierte Produkte (vereinfachte Darstellung als SVG)
 function shade(hex, f) {
@@ -203,6 +203,42 @@ function PlantMarkers({ names, maxNames, body, ink, placeholder }) {
   );
 }
 
+// ---------- Handy-Ständer aus dem Namen: Buchstaben mit Tiefe, Handy lehnt dahinter ----------
+function NameStand({ name, styleId, color, placeholder }) {
+  const st = NAMESTAND_STYLES.find((s) => s.id === styleId) || NAMESTAND_STYLES[0];
+  const txt = st.upper ? name.toUpperCase() : name;
+  const len = Math.max(1, txt.length);
+  const per = st.id === "block" ? 0.47 : 0.56;            // ungefähre Zeichenbreite je Schriftgröße
+  const size = Math.min(st.id === "block" ? 120 : 96, 330 / (len * per));
+  const by = st.id === "block" ? 268 : 250;               // Grundlinie
+  const side = shade(color, isLight(color) ? -0.42 : -0.62), side2 = shade(color, isLight(color) ? -0.28 : -0.5);
+  const depth = 16;
+  const fill = placeholder ? shade(color, 0.35) : color;
+  return (
+    <g>
+      <ellipse cx="200" cy={by + 34} rx="178" ry="18" fill="url(#floor)" />
+      {/* Handy (angedeutet) lehnt hinter dem Namen */}
+      <g transform="rotate(-14 200 250)" opacity="0.92">
+        <rect x="150" y="40" width="100" height="196" rx="16" fill="#1E2026" />
+        <rect x="156" y="48" width="88" height="180" rx="11" fill="#3B4252" />
+        <rect x="156" y="48" width="88" height="180" rx="11" fill="url(#phoneGlow)" />
+      </g>
+      {/* Bodenleiste */}
+      <rect x={200 - Math.min(176, len * size * per / 2 + 10)} y={by + 6} width={2 * Math.min(176, len * size * per / 2 + 10)} height="14" rx="5" fill={side} />
+      {/* Tiefe: Text mehrfach versetzt */}
+      {Array.from({ length: depth }, (_, i) => (
+        <text key={i} x={200 + (depth - i) * 0.9} y={by + 2 + (depth - i) * 0.55} textAnchor="middle" fontFamily={st.css} fontWeight={st.weight} fontSize={size}
+          fill={i < 2 ? side : side2}>{txt}</text>
+      ))}
+      <text x="200" y={by} textAnchor="middle" fontFamily={st.css} fontWeight={st.weight} fontSize={size} fill={fill} stroke={shade(color, isLight(color) ? -0.15 : 0.3)} strokeWidth="1.2" paintOrder="stroke">{txt}</text>
+      <text x="200" y={by} textAnchor="middle" fontFamily={st.css} fontWeight={st.weight} fontSize={size} fill="url(#layers)">{txt}</text>
+      <text x="200" y="346" textAnchor="middle" fontFamily="Inter, sans-serif" fontSize="12.5" fill="#7A7A82">
+        {len > 12 ? "Bitte höchstens 12 Zeichen" : `${st.label} · Breite ca. ${Math.min(23, Math.round(4 + len * (st.id === "block" ? 2.2 : 2.6)))} cm`}
+      </text>
+    </g>
+  );
+}
+
 export default function PersonalizePreview({ product, colorCss, colorCss2, text, fontId, extra }) {
   const type = product.personalize?.type;
   const base = colorCss && colorCss.startsWith("#") ? colorCss : "#8a8d91";
@@ -224,6 +260,10 @@ export default function PersonalizePreview({ product, colorCss, colorCss2, text,
             <rect width="4" height="3.2" fill="transparent" />
             <rect y="3.2" width="4" height="0.8" fill="rgba(0,0,0,0.06)" />
           </pattern>
+          <linearGradient id="phoneGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.18)" />
+            <stop offset="60%" stopColor="rgba(255,255,255,0)" />
+          </linearGradient>
           <radialGradient id="floor" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="rgba(0,0,0,0.22)" />
             <stop offset="100%" stopColor="rgba(0,0,0,0)" />
@@ -300,6 +340,15 @@ export default function PersonalizePreview({ product, colorCss, colorCss2, text,
             body={colorCss && colorCss.startsWith("#") ? colorCss : "#5E7461"}
             ink={colorCss2 && colorCss2.startsWith("#") ? colorCss2 : "#F2EFE8"}
             placeholder={!parseNames(text).length}
+          />
+        )}
+
+        {type === "namestand" && (
+          <NameStand
+            name={text?.trim() || "Christoph"}
+            styleId={fontId}
+            color={colorCss && colorCss.startsWith("#") ? colorCss : "#2B2E4A"}
+            placeholder={!text?.trim()}
           />
         )}
 

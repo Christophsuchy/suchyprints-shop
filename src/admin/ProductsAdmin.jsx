@@ -21,11 +21,13 @@ const PERS_TYPES = [
   { id: "housesign", label: "Hausnummer-Schild (Nummer + Name, 2 Farben)" },
   { id: "keyboard", label: "Schlüsselbrett mit Spruch (2 Farben)" },
   { id: "plantmarkers", label: "Pflanzenstecker-Set (Namen mit Beistrich, 2 Farben)" },
+  { id: "namestand", label: "Handy-Ständer aus dem Namen (Block / Schreibschrift)" },
 ];
 const PERS_PRESETS = {
   housesign: { label: "Familienname", maxLength: 18, extraLabel: "Hausnummer", extraPlaceholder: "z. B. 12 oder 7b" },
   keyboard: { label: "Spruch", maxLength: 40, extraLabel: "", extraPlaceholder: "" },
   plantmarkers: { label: "Namen (mit Beistrich getrennt)", maxLength: 160, maxNames: 6, extraLabel: "", extraPlaceholder: "" },
+  namestand: { label: "Name", maxLength: 12, extraLabel: "", extraPlaceholder: "" },
 };
 
 async function shrink(file) {

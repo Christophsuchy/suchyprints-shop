@@ -24,6 +24,11 @@ export const FIDGET_COLORS = [
 export const SOLID_COLORS = FIDGET_COLORS.filter((c) => !c.css.includes("gradient"));
 
 // Schriftarten für die Live-Vorschau personalisierter Produkte
+// Schriften für den Handy-Ständer aus dem Namen (gleiche Schriften wie der STL-Generator)
+export const NAMESTAND_STYLES = [
+  { id: "block", label: "Blockbuchstaben", css: "'Anton', sans-serif", weight: 400, upper: true },
+  { id: "script", label: "Schreibschrift", css: "'Pacifico', cursive", weight: 400, upper: false },
+];
 export const PERSONALIZE_FONTS = [
   { id: "modern", label: "Modern", css: "'Space Grotesk', sans-serif", weight: 700, width: 0.6 },
   { id: "klar", label: "Klar", css: "'Inter', sans-serif", weight: 600, width: 0.58 },
@@ -67,6 +72,7 @@ export const personalizeLabel = (product, { text, font, extra }) => {
   if (!product?.personalize || !text) return "";
   if (product.personalize.type === "plantmarkers") return `Pflanzenstecker: ${text}`;
   if (product.personalize.type === "keyboard") return `Spruch „${text}“`;
+  if (product.personalize.type === "namestand") return `Name „${text}“ · ${font === "script" ? "Schreibschrift" : "Blockbuchstaben"}`;
   if (product.personalize.type === "housesign") return `Hausnummer ${extra || "?"} · „Familie ${text}“`;
   const f = PERSONALIZE_FONTS.find((x) => x.id === font);
   const bits = [`„${text}“`];
