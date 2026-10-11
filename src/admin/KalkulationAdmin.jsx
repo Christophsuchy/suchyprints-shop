@@ -49,7 +49,7 @@ const Row = ({ k, v, strong }) => (
   <div style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: strong ? 14.5 : 13, fontWeight: strong ? 600 : 400, color: strong ? "#1B1D21" : "#4B5563", fontVariantNumeric: "tabular-nums" }}><span>{k}</span><span>{v}</span></div>
 );
 
-function ProductCalc({ row, S, onSaved }) {
+function ProductCalc({ row, S, onSaved, onDone }) {
   const d = row.data || {};
   const est = ESTIMATES.find(([re]) => re.test(d.name || ""))?.[1];
   const [c, setC] = useState(() => d.calc || (est ? { ...est, estimate: true } : {}));
@@ -81,13 +81,26 @@ function ProductCalc({ row, S, onSaved }) {
     const { error } = await supabase.from("products").update({ data, updated_at: new Date().toISOString() }).eq("id", row.id);
     if (error) { setState("error"); setMsg("Preis speichern fehlgeschlagen: " + error.message); return; }
     row.data = data; setC(clean); setState("saved"); setMsg(`Shop-Preis ist jetzt ${euro(data.price)}.`); onSaved?.();
+    if (!done) toggleDone(true);
   };
   const changed = num(price) !== num(d.price);
+  const [done, setDone] = useState(!!d.priceDone);
+  const toggleDone = async (v) => {
+    setDone(v); onDone?.(row.id, v);
+    const data = { ...row.data, priceDone: v, priceDoneAt: v ? new Date().toISOString() : null };
+    const { error } = await supabase.from("products").update({ data, updated_at: new Date().toISOString() }).eq("id", row.id);
+    if (error) { setDone(!v); onDone?.(row.id, !v); setState("error"); setMsg("Haken speichern fehlgeschlagen: " + error.message); return; }
+    row.data = data;
+  };
 
   return (
-    <div style={{ ...card, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+    <div style={{ ...card, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16, ...(done ? { borderColor: "#9BCDB2", background: "#F6FBF8" } : {}) }}>
       <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <label title="Abhaken, wenn der Preis für dieses Produkt fertig ist" style={{ display: "inline-flex", alignItems: "center", cursor: "pointer" }}>
+          <input type="checkbox" checked={done} onChange={(e) => toggleDone(e.target.checked)} style={{ width: 20, height: 20, accentColor: "#2F7A55", cursor: "pointer", margin: 0 }} />
+        </label>
         <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 16, margin: 0 }}>{d.name}</p>
+        {done && <span style={{ fontSize: 11.5, fontWeight: 600, padding: "2px 8px", borderRadius: 6, background: "#E0F0E7", color: "#2F7A55" }}>Preis fertig</span>}
         <span style={{ fontSize: 12, color: "#6B7280" }}>{d.material || "PLA"}{row.active ? "" : " · ausgeblendet"}</span>
         {c.estimate && <span style={{ fontSize: 11.5, fontWeight: 600, padding: "2px 8px", borderRadius: 6, background: "#F4E6DC", color: "#A85A32" }}>Schätzung</span>}
         <span style={{ marginLeft: "auto", fontSize: 12, color: state === "error" ? "#A33A2C" : "#6B7280", display: "inline-flex", alignItems: "center", gap: 4 }}>
@@ -128,6 +141,8 @@ export default function KalkulationAdmin() {
   const [err, setErr] = useState("");
   const [open, setOpen] = useState(false);
   const [sState, setSState] = useState(null);
+  const [doneMap, setDoneMap] = useState({});
+  const [onlyOpen, setOnlyOpen] = useState(false);
   const sTimer = useRef(null);
 
   const load = async () => {
@@ -135,7 +150,9 @@ export default function KalkulationAdmin() {
     if (error) { setErr(error.message); setRows([]); return; }
     const sRow = data.find((r) => r.id === CALC_ROW_ID);
     if (sRow?.data) setS({ ...DEFAULTS, ...sRow.data, mat: { ...DEFAULTS.mat, ...(sRow.data.mat || {}) } });
-    setRows(data.filter((r) => !String(r.id).startsWith("_") && !isReference(r.data)));
+    const list = data.filter((r) => !String(r.id).startsWith("_") && !isReference(r.data));
+    setRows(list);
+    setDoneMap(Object.fromEntries(list.map((r) => [r.id, !!r.data?.priceDone])));
   };
   useEffect(() => { load(); }, []);
 
@@ -157,7 +174,7 @@ export default function KalkulationAdmin() {
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <style>{`.spin{animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}`}</style>
       <p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>
-        Gewicht und Druckzeit aus Bambu Studio eintragen – Kosten und Empfehlung rechnen sofort mit und werden gespeichert. Der Shop-Preis ändert sich nur, wenn du „Als Shop-Preis übernehmen“ klickst.
+        Gewicht und Druckzeit aus Bambu Studio eintragen – Kosten und Empfehlung rechnen sofort mit und werden gespeichert. Der Shop-Preis ändert sich nur, wenn du „Als Shop-Preis übernehmen“ klickst. Mit dem Haken links neben dem Namen markierst du, welche Preise schon fertig sind (wird beim Übernehmen automatisch gesetzt).
       </p>
       {err && <p style={{ color: "#A33A2C", fontSize: 13, margin: 0 }}>{err}</p>}
       <div style={card}>
@@ -177,7 +194,21 @@ export default function KalkulationAdmin() {
           </div>
         ))}
       </div>
-      {rows.map((r) => <ProductCalc key={r.id} row={r} S={S} />)}
+      {(() => {
+        const total = rows.length, n = rows.filter((r) => doneMap[r.id]).length;
+        return (
+          <div style={{ ...card, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", padding: "12px 16px" }}>
+            <span style={{ fontWeight: 600, fontSize: 14 }}>{n} von {total} Preisen fertig</span>
+            <div style={{ flex: "1 1 160px", height: 8, background: "#EEF0F3", borderRadius: 99, overflow: "hidden", minWidth: 120 }}>
+              <div style={{ width: `${total ? (n / total) * 100 : 0}%`, height: "100%", background: "#2F7A55", transition: "width .3s" }} />
+            </div>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#4B5563", cursor: "pointer" }}>
+              <input type="checkbox" checked={onlyOpen} onChange={(e) => setOnlyOpen(e.target.checked)} style={{ accentColor: "#2F7A55" }} /> nur offene zeigen
+            </label>
+          </div>
+        );
+      })()}
+      {rows.filter((r) => !onlyOpen || !doneMap[r.id]).map((r) => <ProductCalc key={r.id} row={r} S={S} onDone={(id, v) => setDoneMap((m) => ({ ...m, [id]: v }))} />)}
     </div>
   );
 }
