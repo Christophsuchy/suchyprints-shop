@@ -208,7 +208,7 @@ function NameStand({ name, styleId, color, placeholder }) {
   const st = NAMESTAND_STYLES.find((s) => s.id === styleId) || NAMESTAND_STYLES[0];
   const txt = st.upper ? name.toUpperCase() : name;
   const len = Math.max(1, txt.length);
-  const per = st.id === "block" ? 0.47 : 0.56;            // ungefähre Zeichenbreite je Schriftgröße
+  const per = st.id === "block" ? 0.58 : 0.64;            // ungefähre Zeichenbreite je Schriftgröße
   const size = Math.min(st.id === "block" ? 120 : 96, 330 / (len * per));
   const by = st.id === "block" ? 268 : 250;               // Grundlinie
   const side = shade(color, isLight(color) ? -0.42 : -0.62), side2 = shade(color, isLight(color) ? -0.28 : -0.5);
